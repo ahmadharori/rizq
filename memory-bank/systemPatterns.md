@@ -346,7 +346,7 @@ function generateWhatsAppMessage(assignment) {
     message += `${index + 1}. ${recipient.name}\n`;
     message += `📱 ${recipient.phone}\n`;
     message += `📍 ${recipient.address}\n`;
-    message += `${recipient.village}, ${recipient.district}, ${recipient.city}, ${recipient.province}\n`;
+    message += `${recipient.city}, ${recipient.province}\n`;
     message += `🗺️ https://maps.google.com/?q=${recipient.location.lat},${recipient.location.lng}\n\n`;
   });
   

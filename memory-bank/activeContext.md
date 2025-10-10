@@ -2,11 +2,11 @@
 
 ## Current Status
 
-**Project Phase**: Phase 1 - Foundation & Auth (IN PROGRESS)
-**Date**: October 10, 2025 - 15:40 WIB
-**Stage**: Sprint 1.1 - Backend & Frontend Setup Complete ✅
+**Project Phase**: Phase 1 - Foundation & Auth (**✅ SPRINT 1.1 COMPLETED**)
+**Date**: October 10, 2025 - 17:35 WIB
+**Stage**: Sprint 1.1 Complete - Ready for Sprint 1.2 ✅
 
-The RizQ project has completed both backend and frontend setup with full-stack authentication system working end-to-end. Backend API is running at http://localhost:8000 and frontend at http://localhost:5173 with JWT authentication fully functional.
+The RizQ project has completed Sprint 1.1 with full-stack authentication AND database schema creation with PostGIS support. All 10 database tables are now created and Jabodetabek regional data is seeded. Backend API running at http://localhost:8000 and frontend at http://localhost:5173.
 
 ## Current Work Focus
 
@@ -25,11 +25,48 @@ The RizQ project has completed both backend and frontend setup with full-stack a
    - Authentication context provider
    - Login and Dashboard pages
    - Full authentication flow working
+7. ✅ Database schema for recipients, couriers, assignments
+   - Created 9 new tables with proper relationships
+   - PostGIS 3.5 extension installed and enabled
+   - Spatial index on recipients.location (GEOGRAPHY type)
+   - All foreign keys, constraints, and indexes in place
+   - Migrations successfully applied (4 total)
+   - **Simplified regional hierarchy**: Removed districts (kecamatan) and villages (kelurahan)
+   - Regional structure now 2-level: provinces → cities only
+   - Decision rationale: Original 4-level hierarchy with 83,000+ villages too large for MVP
+8. ✅ Jabodetabek regional data seeded
+   - 3 provinces: DKI Jakarta, Jawa Barat, Banten
+   - 14 cities/regencies across Jabodetabek metropolitan area
+   - Seed script created for reproducible data population
+
+### Database Tables Created:
+**Regional Hierarchy (Simplified - Indonesian administrative divisions):**
+- `provinces` - Provinsi (3 seeded: DKI Jakarta, Jawa Barat, Banten)
+- `cities` - Kabupaten/Kota (14 seeded: Jabodetabek area only)
+- ~~`districts`~~ - **REMOVED** (Kecamatan - too large dataset)
+- ~~`villages`~~ - **REMOVED** (Kelurahan/Desa - 83,000+ records too large for MVP)
+
+**Core Business Tables:**
+- `couriers` - Delivery personnel with phone (unique), soft delete support
+- `recipients` - Package recipients with PostGIS location, status tracking, province_id and city_id only
+- `assignments` - Delivery assignments with route_data (JSONB)
+- `assignment_recipients` - Junction table with sequence_order for routes
+- `status_history` - Audit trail for recipient status changes
+
+**System Tables:**
+- `users` - Admin authentication (existing)
+- `spatial_ref_sys` - PostGIS spatial reference systems
+- `alembic_version` - Migration tracking
+
+**Database Seeding Status:**
+- ✅ Provinces: 3 (DKI Jakarta, Jawa Barat, Banten)
+- ✅ Cities/Regencies: 14 (Jabodetabek area only)
+- ⏳ Couriers: Not yet seeded
+- ⏳ Recipients: Not yet seeded
 
 ### Next Tasks
-7. ⏳ Database schema for recipients, couriers, assignments
-8. ⏳ Enable PostGIS extension
-9. ⏳ Seed regional data (provinces, cities, districts, villages)
+9. ✅ Seed regional data (**COMPLETED** - Jabodetabek only)
+10. ⏳ Begin CRUD Recipients implementation (Sprint 1.2) - **NEXT SPRINT**
 
 **Note**: Docker/containerization postponed to Phase 6 (end of project). Focus is on completing all functionality first using local development environment.
 
@@ -50,11 +87,67 @@ The RizQ project has completed both backend and frontend setup with full-stack a
 - **Rationale**: Focus on functionality first, containerize when complete
 - **Status**: Approved, documented in progress.md and techContext.md
 
-**Decision 3: Depot Location**
+**Decision 3: Regional Data Scope**
+- **Decided**: Simplify regional hierarchy from 4 levels to 2 levels
+- **Original Plan**: Provinces → Cities → Districts → Villages (83,000+ villages)
+- **New Plan**: Provinces → Cities only (Jabodetabek area: 3 provinces, 14 cities)
+- **Rationale**: 
+  - 83,000+ villages dataset too large for MVP
+  - Most delivery operations work at city/regency level
+  - Can expand later if district/village precision needed
+  - Reduces data seeding complexity and database size
+- **Impact**: Recipient model uses only province_id and city_id (district_id and village_id removed)
+- **Tables Dropped**: districts (kecamatan), villages (kelurahan/desa)
+- **Status**: Implemented and migrated
+
+**Decision 4: Depot Location**
 - Hardcoded depot location for Phase 1 MVP
 - Future enhancement: configurable multi-depot
 - **Coordinates**: To be determined based on actual warehouse location
 - **Status**: Pending client input
+
+### Important: Regional Data Architecture Change
+
+**Context**: During Sprint 1.1, we made a critical architectural decision to simplify the regional hierarchy.
+
+**Original Design** (from PRD):
+- 4-level hierarchy: Province → City → District → Village
+- Complete Indonesian administrative structure
+- ~34 provinces, ~514 cities, ~7,000+ districts, ~83,000+ villages
+- Recipient model had: province_id, city_id, district_id, village_id
+
+**Current Design** (Sprint 1.1 Implementation):
+- 2-level hierarchy: Province → City only
+- Jabodetabek metropolitan area only
+- 3 provinces, 14 cities/regencies
+- Recipient model has: province_id, city_id (district_id and village_id removed)
+
+**Why the Change**:
+1. **Data Size**: 83,000+ villages is excessive for MVP
+2. **Practical Need**: Most delivery operations identify locations at city level
+3. **Address Details**: Street address + coordinates provide sufficient precision
+4. **Performance**: Smaller dataset reduces database size and query complexity
+5. **Seeding Complexity**: Easier to maintain and validate smaller dataset
+6. **MVP Focus**: Jabodetabek (Greater Jakarta) is the primary operational area
+
+**Impact on Application**:
+- ✅ Recipient forms: 2-level dropdown (Province → City) instead of 4-level
+- ✅ Address display: Shows city and province only (not district/village)
+- ✅ Database queries: Simpler joins and filters
+- ✅ Seed data: Manageable 14 cities vs 83,000+ villages
+- ✅ WhatsApp messages: Address format simplified
+
+**Future Expansion Path**:
+- Can add more provinces/cities as needed (e.g., Bandung, Surabaya, Medan)
+- Can reintroduce districts/villages if client requires finer granularity
+- Migration path exists to add back the columns and tables
+- Current design doesn't prevent future expansion
+
+**Files Created**:
+- `backend/seed_jabodetabek.py` - Seed script for Jabodetabek data
+- `backend/verify_jabodetabek_data.py` - Verification script
+- Migration `74cdae8cd55e` - Drops districts and villages tables
+- Migration `3cce8bcb1be2` - Adds is_deleted column to provinces and cities
 
 ## Next Steps
 
@@ -66,33 +159,44 @@ The RizQ project has completed both backend and frontend setup with full-stack a
    - ✅ Configure frontend (React + Vite + Tailwind)
    - ✅ Environment-based configuration (.env files)
 
-2. Database schema & migrations (IN PROGRESS)
-   - [ ] Create recipients table with PostGIS
-   - [ ] Create couriers table
-   - [ ] Create assignments table
-   - [ ] Create assignment_recipients junction table
-   - [ ] Create status_history table
-   - [ ] Create regional data tables (provinces, cities, districts, villages)
-   - [ ] Run Alembic migrations
+2. Database schema & migrations (COMPLETED ✅)
+   - ✅ Create recipients table with PostGIS
+   - ✅ Create couriers table
+   - ✅ Create assignments table
+   - ✅ Create assignment_recipients junction table
+   - ✅ Create status_history table
+   - ✅ Create regional data tables (provinces, cities only - districts and villages removed)
+   - ✅ Run Alembic migrations (4 migrations total)
+   - ✅ PostGIS 3.5 extension enabled
+   - ✅ Spatial GIST index on recipients.location
 
-3. Regional data preparation
-   - [ ] Source Indonesian regional data (provinces, cities, districts, villages)
-   - [ ] Create seed scripts for database population
-   - [ ] Validate data completeness
+3. Regional data preparation (COMPLETED ✅)
+   - ✅ Decided on Jabodetabek area only for MVP
+   - ✅ Create seed script for Jabodetabek provinces and cities
+   - ✅ Seed 3 provinces: DKI Jakarta, Jawa Barat, Banten
+   - ✅ Seed 14 cities/regencies in Jabodetabek area
+   - ✅ Validate data completeness
 
-### Short-term (Weeks 1-2)
-- Implement authentication system (JWT)
-- Create user management (admin accounts)
-- Set up protected routes
-- Build basic layout (header, sidebar, routing)
-- Implement login/logout flow
+### Short-term (Weeks 1-2) - Sprint 1.1 ✅ COMPLETED
+- ✅ Implement authentication system (JWT)
+- ✅ Create user management (admin accounts)
+- ✅ Set up protected routes
+- ✅ Build basic layout (header, sidebar, routing)
+- ✅ Implement login/logout flow
+- ✅ Database schema with PostGIS
+- ✅ Regional data seeding (Jabodetabek)
+
+### Short-term (Weeks 2-3) - Sprint 1.2 - NEXT
+- CRUD Recipients with geographic data
+- Regional data dropdowns (cascading: province → city)
+- Google Maps integration for coordinate picking
+- Recipient list with search, filter, sort, pagination
+- Recipient detail page with map view
 
 ### Medium-term (Weeks 3-4)
-- CRUD Recipients with geographic data
 - CRUD Couriers
-- Google Maps integration
-- Regional data dropdowns (cascading)
 - Basic assignment viewing
+- Route optimization integration (TSP + CVRP)
 
 ## Important Patterns & Preferences
 
@@ -209,6 +313,7 @@ Unassigned → Assigned → Delivery → Done (terminal)
 3. **User Accounts**: How many admin users initially
 4. **Capacity**: Typical package capacity per courier
 5. **Volume**: Average daily recipients and assignments
+6. **Regional Expansion**: Need to expand beyond Jabodetabek to other regions? (Currently only Jakarta, Bogor, Depok, Tangerang, Bekasi area)
 
 ### Technical Decisions Pending
 1. **Drag & Drop Library**: @dnd-kit vs. react-beautiful-dnd
@@ -255,22 +360,44 @@ When development begins, ensure:
 ## Current Environment
 
 **Development Setup**: ✅ Full Stack Complete (Local Development)
-**Database**: ✅ PostgreSQL running locally, rizq_db created
+**Database**: ✅ PostgreSQL running locally, rizq_db created with PostGIS 3.5
 **Version Control**: ✅ Git initialized
 **Backend Server**: ✅ Running at http://localhost:8000 (local Uvicorn)
 **Frontend Server**: ✅ Running at http://localhost:5173 (local Vite dev server)
 **API Documentation**: ✅ Available at http://localhost:8000/docs
 **Configuration**: ✅ Environment-based (.env files)
 **Containerization**: ⏳ Postponed to Phase 6
+**Regional Data**: ✅ Jabodetabek seeded (3 provinces, 14 cities)
 
 ### Backend Status
 - ✅ FastAPI application running successfully
-- ✅ PostgreSQL database connected
+- ✅ PostgreSQL database connected with PostGIS 3.5
 - ✅ User table created via Alembic migration
 - ✅ Admin user seeded (username: admin, password: admin123!)
 - ✅ JWT authentication working
 - ✅ Bcrypt password hashing implemented
 - ✅ API endpoints functional: /auth/login, /auth/me, /health
+- ✅ Database schema complete (10 tables)
+- ✅ All migrations applied successfully (4 total)
+- ✅ Regional data seeded (Jabodetabek area)
+
+### Database Migration History
+1. **f1a968b65236** - Initial migration: users table
+2. **6e4a059a6c9a** - Add recipients, couriers, assignments tables + regional hierarchy (provinces, cities, districts, villages)
+3. **74cdae8cd55e** - Remove districts and villages tables (simplified regional hierarchy)
+4. **3cce8bcb1be2** - Add is_deleted column to provinces and cities tables
+
+### Regional Data Status
+- **Scope**: Jabodetabek metropolitan area only (Jakarta, Bogor, Depok, Tangerang, Bekasi)
+- **Provinces Seeded**: 3
+  - DKI Jakarta (ID: 31) - 6 administrative areas
+  - Jawa Barat (ID: 32) - 5 cities/regencies (Jabodetabek portion only)
+  - Banten (ID: 36) - 3 cities/regencies (Jabodetabek portion only)
+- **Cities/Regencies Seeded**: 14 total
+- **Districts**: None (removed for MVP)
+- **Villages**: None (removed for MVP - original dataset had 83,000+ records)
+- **Seed Script**: `backend/seed_jabodetabek.py`
+- **Verification Script**: `backend/verify_jabodetabek_data.py`
 - ✅ Authentication tested and verified
 
 ### Frontend Status
@@ -301,7 +428,17 @@ When development begins, ensure:
 - Logout clears token and redirects to login
 - User information displayed correctly on dashboard
 
-**Next Milestone**: Database schema creation for recipients, couriers, assignments + PostGIS setup
+**Next Milestone**: Sprint 1.2 - CRUD Recipients implementation
+
+**Sprint 1.1 Achievements**: ✅ COMPLETED
+- Full-stack authentication working
+- Database schema with PostGIS support
+- 10 tables created with proper relationships
+- 4 Alembic migrations applied
+- Regional hierarchy simplified (2-level instead of 4-level)
+- Jabodetabek regional data seeded
+- Seed scripts created for reproducible data population
+- Verification scripts for data validation
 
 **Development Strategy**: 
 - Phase 1-5: Local development with environment-based configuration

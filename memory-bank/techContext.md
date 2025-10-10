@@ -220,11 +220,15 @@ GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 # Run migrations
 alembic upgrade head
 
-# Seed admin user (optional)
+# Seed admin user
 python seed_admin.py
 
-# Seed regional data (optional)
-python scripts/seed_regions.py
+# Seed Jabodetabek regional data
+python seed_jabodetabek.py
+
+# Verify database schema and seeded data
+python verify_schema.py
+python verify_jabodetabek_data.py
 
 # Run development server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

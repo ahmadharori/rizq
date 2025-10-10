@@ -2,15 +2,15 @@
 
 ## Project Status Overview
 
-**Current Phase**: Phase 1 - Foundation & Auth (IN PROGRESS)  
-**Overall Progress**: 30% (Sprint 1.1 Backend & Frontend Setup Complete)  
-**Last Updated**: October 10, 2025 - 15:39 WIB
+**Current Phase**: Phase 1 - Foundation & Auth (**✅ SPRINT 1.1 COMPLETED**)  
+**Overall Progress**: 40% (Sprint 1.1 Complete - Moving to Sprint 1.2)  
+**Last Updated**: October 10, 2025 - 17:35 WIB
 
 ## Development Phases
 
 ### Phase 1: Foundation & Auth (Weeks 1-2) - ⏳ Not Started
 
-#### Sprint 1.1: Project Setup & Authentication (5 days) - 🔄 IN PROGRESS
+#### Sprint 1.1: Project Setup & Authentication (5 days) - ✅ **COMPLETED**
 **Target**: Working authentication + project skeleton
 
 - [x] Initialize Git repository
@@ -41,13 +41,45 @@
   - [x] Protected routes working
   - [x] Frontend running at http://localhost:5173
   - [x] Tailwind PostCSS error resolved
-- [ ] Database schema creation for recipients, couriers, assignments
-- [ ] Enable PostGIS extension (postponed until recipients table)
-- [ ] Seed regional data (provinces, cities, districts, villages)
+- [x] Database schema creation for recipients, couriers, assignments
+  - [x] Created SQLAlchemy models for regional data (provinces, cities, districts, villages)
+  - [x] Created Courier model with soft delete
+  - [x] Created Recipient model with PostGIS GEOGRAPHY type for location
+  - [x] Created Assignment, AssignmentRecipient junction, and StatusHistory models
+  - [x] Generated Alembic migration with all tables, indexes, and constraints
+  - [x] Installed PostGIS 3.5 via Stack Builder
+  - [x] Successfully ran migration - all 12 tables created
+  - [x] Verified PostGIS extension and spatial index
+  - [x] Simplified regional hierarchy - removed districts and villages (too large dataset)
+  - [x] Updated models to only use provinces and cities (2-level hierarchy)
+  - [x] Created and ran migration to drop districts and villages tables
+  - [x] Added is_deleted column to provinces and cities tables
+- [x] Enable PostGIS extension (completed with database schema)
+- [x] Seed regional data (Jabodetabek only: 3 provinces, 14 cities)
 
-**Deliverable**: Working authentication + project skeleton (Backend & Frontend 100% Complete ✅)
+**Deliverable**: Working authentication + project skeleton (✅ **COMPLETED 100%**)
+
+**Sprint 1.1 Completion Summary:**
+- ✅ Backend API with FastAPI + PostgreSQL
+- ✅ Frontend app with React + Vite + Tailwind + shadcn/ui
+- ✅ Full-stack JWT authentication system
+- ✅ Database schema with PostGIS support
+- ✅ Regional data seeded (Jabodetabek area)
+- ✅ 10 database tables with proper relationships
+- ✅ Alembic migrations working
+- ✅ Development environment fully configured
 
 **Note**: Docker/containerization postponed to Phase 6. All development uses local services with environment-based configuration for easy containerization later.
+
+**Database Tables Created (10 total):**
+- Regional: provinces, cities (Jabodetabek area: 3 provinces, 14 cities/regencies)
+- Core: couriers, recipients, assignments, assignment_recipients, status_history
+- System: users, alembic_version, spatial_ref_sys (PostGIS)
+
+**Regional Data Seeded:**
+- **DKI Jakarta Province**: 6 administrative areas (Jakarta Pusat, Utara, Barat, Selatan, Timur, Kepulauan Seribu)
+- **Jawa Barat Province**: 5 cities/regencies (Kota Bogor, Kota Depok, Kota Bekasi, Kabupaten Bogor, Kabupaten Bekasi)
+- **Banten Province**: 3 cities/regencies (Kota Tangerang, Kota Tangerang Selatan, Kabupaten Tangerang)
 
 #### Sprint 1.2: CRUD Recipients (5 days) - ⏳ Pending
 **Target**: Complete recipient management
@@ -295,6 +327,18 @@
 - Frontend running successfully at http://localhost:5173
 - Full-stack authentication flow working end-to-end
 
+✅ **Database Schema (PostgreSQL + PostGIS)**
+- 10 tables created with proper relationships
+- PostGIS 3.5 extension installed and enabled
+- Regional hierarchy simplified to 2 levels (provinces and cities only)
+- Core business tables (couriers, recipients, assignments)
+- Junction and audit tables (assignment_recipients, status_history)
+- Spatial GIST index on recipients.location (GEOGRAPHY POINT, SRID 4326)
+- All foreign key constraints, check constraints, and indexes in place
+- Alembic migrations successfully applied (4 migrations total)
+- Models: User, Province, City, Courier, Recipient, Assignment, AssignmentRecipient, StatusHistory
+- **Jabodetabek data seeded**: 3 provinces, 14 cities/regencies
+
 ### Current Strengths
 - Clear understanding of user pain points
 - Well-defined technical architecture
@@ -338,14 +382,17 @@ All features listed in PRD need implementation:
 
 ### Resolved Issues
 ✅ **Bcrypt Python 3.13 Compatibility** - Switched from passlib to direct bcrypt usage
-✅ **PostGIS Installation** - Postponed to future migration when needed for recipients table
+✅ **PostGIS Installation** - Installed PostGIS 3.5 via PostgreSQL Stack Builder
+✅ **Database Connection** - Updated .env to use localhost:5432 (standard PostgreSQL port)
+✅ **Regional Data Size** - Simplified from 4-level (83,000+ villages) to 2-level hierarchy (14 cities)
+✅ **Missing is_deleted Column** - Added migration to include is_deleted in provinces and cities tables
 
 ### Pending Information
-1. **Depot Location**: Actual warehouse coordinates needed
-2. **Regional Data Source**: Need to source Indonesian regional data (BPS)
-3. **Google API Keys**: Need to create Google Cloud Platform project
-4. **Hosting Provider**: Decision pending on AWS/GCP/DigitalOcean/Railway
-5. **Initial User Data**: Migration data from existing system (if any)
+1. **Depot Location**: Actual warehouse coordinates needed (will use placeholder for MVP)
+2. **Google API Keys**: Need to create Google Cloud Platform project for Maps API
+3. **Hosting Provider**: Decision pending on AWS/GCP/DigitalOcean/Railway
+4. **Initial User Data**: Migration data from existing system (if any)
+5. **Recipient Data**: Need actual recipient data for testing (names, addresses, coordinates)
 
 ### Technical Risks
 1. **CVRP Performance**: May need optimization if 60s timeout insufficient
@@ -434,6 +481,21 @@ All features listed in PRD need implementation:
 ## Notes
 
 ### Recent Changes
+- **2025-10-10 17:35 WIB**: Jabodetabek regional data seeded successfully ✅
+  - Seeded 3 provinces: DKI Jakarta, Jawa Barat, Banten
+  - Seeded 14 cities/regencies across Jabodetabek metropolitan area
+  - Created seed_jabodetabek.py script for reproducible seeding
+  - **Sprint 1.1 COMPLETED** - All deliverables achieved
+- **2025-10-10 17:34 WIB**: Database schema simplified ✅
+  - Removed districts and villages tables (dataset too large)
+  - Updated Recipient model to use only province_id and city_id
+  - Created migration to drop districts and villages
+  - Added is_deleted column to provinces and cities tables
+  - Regional hierarchy now 2-level instead of 4-level
+- **2025-10-10 17:00 WIB**: Database schema created ✅
+  - All 12 tables created with PostGIS support
+  - Spatial index on recipients.location working
+  - Schema verified successfully
 - **2025-10-10 16:30 WIB**: Memory bank revised for containerization strategy ✅
   - Docker/containerization postponed to Phase 6 (end of project)
   - Development approach updated to use environment-based configuration
