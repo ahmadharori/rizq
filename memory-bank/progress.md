@@ -2,9 +2,9 @@
 
 ## Project Status Overview
 
-**Current Phase**: Phase 1 - Foundation & Auth (**✅ SPRINT 1.1 COMPLETED**)  
-**Overall Progress**: 40% (Sprint 1.1 Complete - Moving to Sprint 1.2)  
-**Last Updated**: October 10, 2025 - 17:35 WIB
+**Current Phase**: Phase 1 - Foundation & Auth (**✅ SPRINT 1.1 COMPLETED**, **🔄 SPRINT 1.2 BACKEND COMPLETED**)  
+**Overall Progress**: 48% (Sprint 1.1 Complete + Sprint 1.2 Backend Complete)  
+**Last Updated**: October 11, 2025 - 05:22 WIB
 
 ## Development Phases
 
@@ -81,20 +81,37 @@
 - **Jawa Barat Province**: 5 cities/regencies (Kota Bogor, Kota Depok, Kota Bekasi, Kabupaten Bogor, Kabupaten Bekasi)
 - **Banten Province**: 3 cities/regencies (Kota Tangerang, Kota Tangerang Selatan, Kabupaten Tangerang)
 
-#### Sprint 1.2: CRUD Recipients (5 days) - ⏳ Pending
+#### Sprint 1.2: CRUD Recipients (5 days) - ✅ **BACKEND COMPLETED**
 **Target**: Complete recipient management
 
-- [ ] Backend: Recipient API endpoints (CRUD)
+**Backend (✅ COMPLETED):**
+- [x] Backend: Recipient API endpoints (CRUD)
+  - [x] GET /api/v1/recipients - List with pagination, search, filters
+  - [x] GET /api/v1/recipients/{id} - Get detail
+  - [x] POST /api/v1/recipients - Create recipient
+  - [x] PUT /api/v1/recipients/{id} - Update recipient
+  - [x] DELETE /api/v1/recipients/{id} - Soft delete
+  - [x] DELETE /api/v1/recipients/bulk/delete - Bulk soft delete
+  - [x] GET /api/v1/recipients/{id}/history - Status history
+- [x] Repository pattern implementation (RecipientRepository)
+- [x] PostGIS location handling with geoalchemy2 + shapely
+- [x] Status validation logic (prevent update/delete for certain statuses)
+- [x] Comprehensive unit tests (15 repository tests)
+- [x] Comprehensive integration tests (20 API tests)
+- [x] **35/35 tests passing (100%)**
+- [x] **90.93% code coverage** (exceeds 80% target)
+
+**Frontend (⏳ PENDING):**
 - [ ] Frontend: Recipient list page with table
-- [ ] Search, filter, sort, pagination
+- [ ] Search, filter, sort, pagination UI
 - [ ] Create/Update recipient forms
 - [ ] Regional dropdown cascading
 - [ ] Google Maps coordinate picker
-- [ ] Delete (single & bulk)
+- [ ] Delete (single & bulk) UI
 - [ ] Recipient detail page with map
 - [ ] Status history table
 
-**Deliverable**: Complete recipient management
+**Deliverable**: Complete recipient management (Backend ✅ Complete, Frontend ⏳ Pending)
 
 ---
 
@@ -481,6 +498,20 @@ All features listed in PRD need implementation:
 ## Notes
 
 ### Recent Changes
+- **2025-10-11 05:22 WIB**: Sprint 1.2 Backend completed ✅
+  - **All 35 tests passing (100%)**
+  - **90.93% code coverage achieved**
+  - Fixed PostGIS Geography WKBElement handling using geoalchemy2.shape + shapely
+  - Fixed API response format (items vs recipients)
+  - Fixed HTTP error handling (proper 404 responses)
+  - Fixed bulk delete schema validation (ids field)
+  - Complete Recipient API with 7 RESTful endpoints
+  - Repository pattern implementation with RecipientRepository
+  - pytest + coverage configuration completed
+  - Test fixtures with PostgreSQL + PostGIS test database
+  - 15 repository unit tests + 20 API integration tests
+  - HTML coverage report generated (backend/htmlcov/)
+  - **Sprint 1.2 Backend PRODUCTION-READY** ✅
 - **2025-10-10 17:35 WIB**: Jabodetabek regional data seeded successfully ✅
   - Seeded 3 provinces: DKI Jakarta, Jawa Barat, Banten
   - Seeded 14 cities/regencies across Jabodetabek metropolitan area
