@@ -27,9 +27,11 @@ The RizQ project has completed both backend and frontend setup with full-stack a
    - Full authentication flow working
 
 ### Next Tasks
-7. ⏳ Docker Compose configuration
-8. ⏳ Database schema for recipients, couriers, assignments
+7. ⏳ Database schema for recipients, couriers, assignments
+8. ⏳ Enable PostGIS extension
 9. ⏳ Seed regional data (provinces, cities, districts, villages)
+
+**Note**: Docker/containerization postponed to Phase 6 (end of project). Focus is on completing all functionality first using local development environment.
 
 ### Active Decisions
 
@@ -43,8 +45,10 @@ The RizQ project has completed both backend and frontend setup with full-stack a
 **Decision 2: Development Approach**
 - Start with Phase 1: Foundation & Authentication (Weeks 1-2)
 - Iterative development with 2-week sprints
-- Docker-based development environment
-- **Status**: Planning phase
+- Local development environment (Phase 1-5)
+- Docker containerization in Phase 6 (end of project)
+- **Rationale**: Focus on functionality first, containerize when complete
+- **Status**: Approved, documented in progress.md and techContext.md
 
 **Decision 3: Depot Location**
 - Hardcoded depot location for Phase 1 MVP
@@ -55,23 +59,26 @@ The RizQ project has completed both backend and frontend setup with full-stack a
 ## Next Steps
 
 ### Immediate (Week 1)
-1. Set up development environment
-   - Initialize Git repository
-   - Create Docker Compose configuration
-   - Set up PostgreSQL + PostGIS database
-   - Configure backend (FastAPI project structure)
-   - Configure frontend (React + Vite + Tailwind)
+1. ✅ Set up development environment (COMPLETED)
+   - ✅ Initialize Git repository
+   - ✅ Set up local PostgreSQL database
+   - ✅ Configure backend (FastAPI project structure)
+   - ✅ Configure frontend (React + Vite + Tailwind)
+   - ✅ Environment-based configuration (.env files)
 
-2. Project scaffolding
-   - Backend folder structure (routers, services, models)
-   - Frontend folder structure (components, features, services)
-   - Environment configuration (.env files)
-   - Database schema creation (Alembic migrations)
+2. Database schema & migrations (IN PROGRESS)
+   - [ ] Create recipients table with PostGIS
+   - [ ] Create couriers table
+   - [ ] Create assignments table
+   - [ ] Create assignment_recipients junction table
+   - [ ] Create status_history table
+   - [ ] Create regional data tables (provinces, cities, districts, villages)
+   - [ ] Run Alembic migrations
 
 3. Regional data preparation
-   - Source Indonesian regional data (provinces, cities, districts, villages)
-   - Create seed scripts for database population
-   - Validate data completeness
+   - [ ] Source Indonesian regional data (provinces, cities, districts, villages)
+   - [ ] Create seed scripts for database population
+   - [ ] Validate data completeness
 
 ### Short-term (Weeks 1-2)
 - Implement authentication system (JWT)
@@ -101,6 +108,8 @@ The RizQ project has completed both backend and frontend setup with full-stack a
 - **Frontend**: Feature-based with shared components
 - **Separation of Concerns**: Clear boundaries between layers
 - **DRY Principle**: Reusable components and utilities
+- **Configuration Management**: Environment-based, never hardcoded
+- **12-Factor App**: Principles for easy containerization later
 
 ### UI/UX Principles
 - **Schneiderman's 8 Golden Rules**: Consistency, shortcuts, feedback, closure, error prevention, reversal, control, memory load
@@ -114,6 +123,10 @@ The RizQ project has completed both backend and frontend setup with full-stack a
 - **Error Handling**: Graceful degradation, user-friendly messages
 - **Testing**: >80% coverage target
 - **Documentation**: Code comments for complex logic
+- **Environment Variables**: All config via .env files
+- **No Hardcoding**: Database URLs, API keys, service endpoints
+- **Relative Paths**: No absolute file paths
+- **Container-Ready**: Code works locally and in containers without changes
 
 ## Key Learnings & Project Insights
 
@@ -241,12 +254,14 @@ When development begins, ensure:
 
 ## Current Environment
 
-**Development Setup**: ✅ Full Stack Complete
-**Database**: ✅ PostgreSQL running, rizq_db created
+**Development Setup**: ✅ Full Stack Complete (Local Development)
+**Database**: ✅ PostgreSQL running locally, rizq_db created
 **Version Control**: ✅ Git initialized
-**Backend Server**: ✅ Running at http://localhost:8000
-**Frontend Server**: ✅ Running at http://localhost:5173
+**Backend Server**: ✅ Running at http://localhost:8000 (local Uvicorn)
+**Frontend Server**: ✅ Running at http://localhost:5173 (local Vite dev server)
 **API Documentation**: ✅ Available at http://localhost:8000/docs
+**Configuration**: ✅ Environment-based (.env files)
+**Containerization**: ⏳ Postponed to Phase 6
 
 ### Backend Status
 - ✅ FastAPI application running successfully
@@ -286,4 +301,9 @@ When development begins, ensure:
 - Logout clears token and redirects to login
 - User information displayed correctly on dashboard
 
-**Next Milestone**: Docker Compose configuration + Database schema for recipients, couriers, assignments
+**Next Milestone**: Database schema creation for recipients, couriers, assignments + PostGIS setup
+
+**Development Strategy**: 
+- Phase 1-5: Local development with environment-based configuration
+- Phase 6: Containerization and deployment
+- All code is container-ready (no hardcoded values, environment-based config)

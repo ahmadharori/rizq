@@ -363,27 +363,244 @@ function generateWhatsAppMessage(assignment) {
 }
 ```
 
+## Configuration Management Pattern
+
+### Environment-Based Configuration
+
+**Purpose**: Enable seamless transition from local development to containerized deployment without code changes.
+
+**Implementation Pattern:**
+
+```python
+# backend/app/config.py
+import os
+from typing import Optional
+from pydantic_settings import BaseSettings
+from functools import lru_cache
+
+class Settings(BaseSettings):
+    """
+    Application settings loaded from environment variables.
+    Follows 12-factor app principles for container-ready deployment.
+    """
+    
+    # Database Configuration (container-ready)
+    db_host: str = os.getenv("DB_HOST", "localhost")
+    db_port: int = int(os.getenv("DB_PORT", "5432"))
+    db_name: str = os.getenv("DB_NAME", "rizq_db")
+    db_user: str = os.getenv("DB_USER", "postgres")
+    db_password: str = os.getenv("DB_PASSWORD", "")
+    
+    @property
+    def database_url(self) -> str:
+        """Construct database URL from components"""
+        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+    
+    # Application Settings
+    secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+    environment: str = os.getenv("ENVIRONMENT", "development")
+    debug: bool = os.getenv("DEBUG", "True").lower() == "true"
+    
+    # API Configuration
+    api_host: str = os.getenv("API_HOST", "0.0.0.0")
+    api_port: int = int(os.getenv("API_PORT", "8000"))
+    cors_origins: list[str] = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+    
+    # External Services
+    google_maps_api_key: str = os.getenv("GOOGLE_MAPS_API_KEY", "")
+    
+    # Optional Services (future)
+    redis_url: Optional[str] = os.getenv("REDIS_URL", None)
+    sentry_dsn: Optional[str] = os.getenv("SENTRY_DSN", None)
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Cached settings instance"""
+    return Settings()
+
+# Usage in application
+settings = get_settings()
+```
+
+**Frontend Configuration:**
+
+```typescript
+// frontend/src/config/env.ts
+interface EnvironmentConfig {
+  apiBaseUrl: string;
+  googleMapsApiKey: string;
+  environment: string;
+  apiTimeout: number;
+}
+
+export const config: EnvironmentConfig = {
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+  environment: import.meta.env.VITE_ENVIRONMENT || 'development',
+  apiTimeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10),
+};
+
+// Usage in API service
+import { config } from '@/config/env';
+
+const api = axios.create({
+  baseURL: config.apiBaseUrl,
+  timeout: config.apiTimeout,
+});
+```
+
+### File Path Management Pattern
+
+**Purpose**: Ensure paths work in both local and containerized environments.
+
+```python
+# ✅ CORRECT: Relative paths with environment override
+import os
+from pathlib import Path
+
+# Base directory relative to current file
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Configurable paths with sensible defaults
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BASE_DIR / "uploads")))
+STATIC_DIR = Path(os.getenv("STATIC_DIR", str(BASE_DIR / "static")))
+LOG_DIR = Path(os.getenv("LOG_DIR", str(BASE_DIR / "logs")))
+
+# Ensure directories exist
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+# Usage
+def save_file(filename: str, content: bytes):
+    file_path = UPLOAD_DIR / filename
+    with open(file_path, 'wb') as f:
+        f.write(content)
+```
+
+```python
+# ❌ INCORRECT: Hardcoded absolute paths
+UPLOAD_DIR = "C:/Users/Admin/uploads"  # Breaks in containers
+STATIC_DIR = "/home/user/project/static"  # Not portable
+```
+
+### Service Connection Pattern
+
+**Purpose**: Abstract external service connections for easy swapping between local and containerized services.
+
+```python
+# backend/app/services/database.py
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.config import get_settings
+
+settings = get_settings()
+
+# Database connection uses environment-based URL
+engine = create_engine(
+    settings.database_url,
+    pool_size=int(os.getenv("DB_POOL_SIZE", "20")),
+    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
+    pool_pre_ping=True,  # Verify connections before use
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db():
+    """Dependency for database sessions"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+```
+
+**Local Development (.env):**
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=rizq_db
+DB_USER=postgres
+DB_PASSWORD=mypassword
+```
+
+**Docker Container (.env):**
+```env
+DB_HOST=postgres  # Service name in docker-compose
+DB_PORT=5432
+DB_NAME=rizq_db
+DB_USER=postgres
+DB_PASSWORD=mypassword
+```
+
+**Production (Environment Variables):**
+```env
+DB_HOST=production-db.example.com
+DB_PORT=5432
+DB_NAME=rizq_production
+DB_USER=rizq_user
+DB_PASSWORD=strong-production-password
+```
+
+### Secrets Management Pattern
+
+**Development:**
+```env
+# .env (not committed to Git)
+SECRET_KEY=dev-secret-key-for-local-testing
+GOOGLE_MAPS_API_KEY=AIza...development-key
+DB_PASSWORD=local-dev-password
+```
+
+**Production:**
+```bash
+# Environment variables from secrets manager
+export SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id prod/rizq/secret-key --query SecretString --output text)
+export DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id prod/rizq/db-password --query SecretString --output text)
+```
+
 ## Design Decisions
 
-### Decision 1: Open VRP (No Return to Depot)
+### Decision 1: Environment-Based Configuration (NEW)
+**Rationale**: Enable seamless local-to-container transition without code changes
+**Impact**: All configuration via environment variables, no hardcoded values
+**Benefits**: 
+- Same codebase works locally and in containers
+- Easy to configure for different environments
+- Follows 12-factor app principles
+- Secrets never in source code
+
+### Decision 2: Open VRP (No Return to Depot)
 **Rationale**: Couriers typically end routes at their homes, not warehouse
 **Impact**: Simplifies algorithm, more realistic for use case
 
-### Decision 2: Soft Delete Pattern
+### Decision 3: Soft Delete Pattern
 **Rationale**: Maintain audit trail, allow data recovery
 **Implementation**: `is_deleted` boolean flag, filter in queries
 
-### Decision 3: No Real-time State on Backend
+### Decision 4: No Real-time State on Backend
 **Rationale**: Polling-based updates sufficient for MVP
 **Trade-off**: Future may need WebSocket for real-time features
 
-### Decision 4: Embedded Route Data (JSONB)
+### Decision 5: Embedded Route Data (JSONB)
 **Rationale**: Avoid complex joins, fast reads, flexible schema
 **Trade-off**: Slightly denormalized, but acceptable for read-heavy use case
 
-### Decision 5: Client-side Map Rendering
+### Decision 6: Client-side Map Rendering
 **Rationale**: Rich interaction, no server load for maps
 **Trade-off**: Google Maps API quota usage, but cached well
+
+### Decision 7: Postpone Containerization to Phase 6
+**Rationale**: Focus on functionality first, containerize when complete
+**Impact**: Development uses local services, but code is container-ready
+**Benefits**:
+- Faster initial development
+- Easier debugging in local environment
+- No code changes needed for containerization
+- Environment-based config ensures smooth transition
 
 ## Performance Considerations
 

@@ -154,19 +154,20 @@
 ```bash
 # Backend
 Python 3.10+
-PostgreSQL 14+ with PostGIS
+PostgreSQL 14+ with PostGIS (local installation)
 pip (package manager)
 
 # Frontend
 Node.js 18+
 npm or yarn
 
-# Optional
-Docker & Docker Compose
+# Version Control
 Git
 ```
 
-### Backend Setup
+### Local Development Setup (Recommended for Phase 1-5)
+
+#### Backend Setup
 ```bash
 # Clone repository
 git clone <repo-url>
@@ -179,40 +180,143 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Setup database
+# Setup local PostgreSQL database
 createdb rizq_db
 psql -d rizq_db -c "CREATE EXTENSION postgis;"
 
-# Configure environment
+# Configure environment variables
 cp .env.example .env
-# Edit .env with your credentials
+# Edit .env with your local credentials
+```
 
+**Backend .env.example:**
+```env
+# Database Configuration (environment-based)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=rizq_db
+DB_USER=your_username
+DB_PASSWORD=your_password
+DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+
+# Application Settings
+SECRET_KEY=your-secret-key-change-in-production
+ENVIRONMENT=development
+DEBUG=True
+
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# Google Maps API
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+
+# Optional: Future services
+# REDIS_URL=redis://localhost:6379
+```
+
+```bash
 # Run migrations
 alembic upgrade head
+
+# Seed admin user (optional)
+python seed_admin.py
 
 # Seed regional data (optional)
 python scripts/seed_regions.py
 
 # Run development server
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend Setup
+#### Frontend Setup
 ```bash
 cd frontend
 
 # Install dependencies
 npm install
 
-# Configure environment
+# Configure environment variables
 cp .env.example .env
 # Edit .env with API URL and Google Maps key
+```
 
+**Frontend .env.example:**
+```env
+# API Configuration (environment-based)
+VITE_API_BASE_URL=http://localhost:8000
+VITE_API_TIMEOUT=30000
+
+# Google Maps API
+VITE_GOOGLE_MAPS_API_KEY=your-google-maps-browser-key
+
+# Application Settings
+VITE_ENVIRONMENT=development
+```
+
+```bash
 # Run development server
 npm run dev
 ```
 
-### Docker Setup (Recommended)
+### Environment-Based Configuration Best Practices
+
+**✅ DO:**
+- Use environment variables for ALL external service connections
+- Provide sensible defaults for development
+- Document all environment variables in .env.example
+- Never commit actual .env files to version control
+- Use different API keys for development and production
+
+**❌ DON'T:**
+- Hardcode database URLs, API keys, or service endpoints
+- Use absolute file paths
+- Commit secrets to Git
+- Mix configuration with application code
+
+**Example: Configuration Loading Pattern**
+```python
+# backend/app/config.py
+import os
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    # Database (environment-based, container-ready)
+    db_host: str = os.getenv("DB_HOST", "localhost")
+    db_port: int = int(os.getenv("DB_PORT", "5432"))
+    db_name: str = os.getenv("DB_NAME", "rizq_db")
+    db_user: str = os.getenv("DB_USER", "postgres")
+    db_password: str = os.getenv("DB_PASSWORD", "")
+    
+    @property
+    def database_url(self) -> str:
+        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+    
+    # Application
+    secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
+    environment: str = os.getenv("ENVIRONMENT", "development")
+    debug: bool = os.getenv("DEBUG", "True").lower() == "true"
+    
+    # External Services
+    google_maps_api_key: str = os.getenv("GOOGLE_MAPS_API_KEY", "")
+    
+    # Optional: Future services
+    redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379")
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+settings = Settings()
+```
+
+### Docker Setup (Phase 6 - Containerization)
+
+**Note**: Docker setup is postponed to Phase 6. During Phase 1-5, use local development setup above.
+
+When ready for containerization (Phase 6), the following will be implemented:
+
 ```bash
 # Root directory
 docker-compose up --build
@@ -222,6 +326,13 @@ docker-compose up --build
 # - frontend: http://localhost:5173
 # - postgres: localhost:5432
 ```
+
+**Benefits of Environment-Based Approach:**
+- Same codebase works locally and in containers
+- Easy transition to Docker in Phase 6
+- No code changes needed for containerization
+- Configuration managed through environment variables
+- Supports multiple deployment targets (local, Docker, cloud)
 
 ## Technical Constraints
 
@@ -415,32 +526,201 @@ npm run test:e2e
 - Integration tests: Critical paths covered
 - E2E tests: Main user journeys
 
-## Deployment Architecture
+## Deployment Architecture (Phase 6)
 
-### Production Stack
+### Local Development (Phase 1-5)
+```
+Developer Machine
+  ↓
+├─ Backend (Uvicorn + FastAPI)
+│  - Port: 8000
+│  - Config: .env file
+│  - Database: Local PostgreSQL
+│
+├─ Frontend (Vite Dev Server)
+│  - Port: 5173
+│  - Config: .env file
+│  - API: http://localhost:8000
+│
+└─ PostgreSQL + PostGIS
+   - Port: 5432
+   - Local installation
+```
+
+### Containerized Development (Phase 6)
+```
+Docker Compose
+  ↓
+├─ Backend Container
+│  - Image: rizq-backend:latest
+│  - Port: 8000
+│  - Config: Environment variables
+│
+├─ Frontend Container
+│  - Image: rizq-frontend:latest
+│  - Port: 80
+│  - Nginx serving static files
+│
+└─ PostgreSQL Container
+   - Image: postgis/postgis:14-3.3
+   - Port: 5432
+   - Volume: Persistent data
+```
+
+### Production Stack (Phase 6)
 ```
 Internet
   ↓
 Nginx (Reverse Proxy, SSL)
   ↓
 ├─ Frontend (Static Files)
+│  - Served by Nginx
+│  - Environment variables injected at build
+│
 └─ Backend (Uvicorn + FastAPI)
+   - Gunicorn + Uvicorn workers
+   - Environment variables from secrets
       ↓
    PostgreSQL + PostGIS
+   - Managed database service or container
+   - Persistent volumes
+   - Automated backups
 ```
 
 ### Environment Variables (Production)
 ```bash
 # Backend
-DATABASE_URL=postgresql://...
-SECRET_KEY=<strong-random-key>
-GOOGLE_MAPS_API_KEY=<production-key>
-ENVIRONMENT=production
-CORS_ORIGINS=https://yourdomain.com
+DB_HOST=production-db-host
+DB_PORT=5432
+DB_NAME=rizq_production
+DB_USER=rizq_user
+DB_PASSWORD=<strong-password>
+DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
-# Frontend
+SECRET_KEY=<strong-random-key-min-32-chars>
+ENVIRONMENT=production
+DEBUG=False
+
+API_HOST=0.0.0.0
+API_PORT=8000
+CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+GOOGLE_MAPS_API_KEY=<production-server-key>
+
+# Optional: Production services
+REDIS_URL=redis://production-redis:6379
+SENTRY_DSN=<sentry-error-tracking-url>
+
+# Frontend (injected at build time)
 VITE_API_BASE_URL=https://api.yourdomain.com
-VITE_GOOGLE_MAPS_API_KEY=<browser-key>
+VITE_GOOGLE_MAPS_API_KEY=<production-browser-key>
+VITE_ENVIRONMENT=production
+```
+
+### Container-Ready Configuration Pattern
+
+**Backend Dockerfile (Phase 6):**
+```dockerfile
+# Multi-stage build for optimization
+FROM python:3.10-slim as builder
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.10-slim
+
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY . .
+
+# Environment variables will be provided at runtime
+ENV PYTHONUNBUFFERED=1
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+**Frontend Dockerfile (Phase 6):**
+```dockerfile
+# Build stage
+FROM node:18-alpine as builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+# Environment variables injected at build time
+ARG VITE_API_BASE_URL
+ARG VITE_GOOGLE_MAPS_API_KEY
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
+
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+**Docker Compose (Phase 6):**
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE_URL=http://localhost:8000
+        - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  postgres:
+    image: postgis/postgis:14-3.3
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
 ```
 
 ## Security Considerations
@@ -464,16 +744,80 @@ VITE_GOOGLE_MAPS_API_KEY=<browser-key>
 - No credentials in source code
 - Soft delete for audit trail
 
+## Configuration Management Principles
+
+### 12-Factor App Compliance
+
+The application follows 12-factor app principles for easy containerization:
+
+1. **Codebase**: One codebase tracked in Git
+2. **Dependencies**: Explicitly declared (requirements.txt, package.json)
+3. **Config**: Stored in environment variables, never in code
+4. **Backing Services**: Treated as attached resources (DB, Redis, APIs)
+5. **Build, Release, Run**: Strict separation of stages
+6. **Processes**: Stateless processes (session in DB/Redis, not memory)
+7. **Port Binding**: Self-contained services (Uvicorn, Vite)
+8. **Concurrency**: Scale via process model
+9. **Disposability**: Fast startup, graceful shutdown
+10. **Dev/Prod Parity**: Keep development and production similar
+11. **Logs**: Treat logs as event streams
+12. **Admin Processes**: Run admin tasks as one-off processes
+
+### Environment Variable Hierarchy
+
+**Development (Phase 1-5):**
+```
+.env file → Environment Variables → Application Defaults
+```
+
+**Production (Phase 6):**
+```
+Container Environment → Secrets Manager → Application Defaults
+```
+
+### File Path Management
+
+**✅ Correct Approach:**
+```python
+import os
+from pathlib import Path
+
+# Base directory (relative to current file)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Upload directory (configurable)
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", str(BASE_DIR / "uploads"))
+
+# Static files (relative)
+STATIC_DIR = BASE_DIR / "static"
+```
+
+**❌ Incorrect Approach:**
+```python
+# Hardcoded absolute paths - breaks in containers
+UPLOAD_DIR = "C:/Users/Admin/uploads"
+STATIC_DIR = "/home/user/project/static"
+```
+
 ## Future Technical Considerations
 
-### Scalability Improvements
+### Scalability Improvements (Post-MVP)
 - **Redis**: Caching layer for geocoding, regional data
 - **WebSocket**: Real-time status updates
 - **CDN**: Static asset delivery
 - **Load balancer**: Horizontal scaling
+- **Database replication**: Read replicas for performance
 
-### Additional Features
+### Additional Features (Future Phases)
 - **Mobile app**: React Native or Flutter
 - **Real-time tracking**: GPS integration
 - **Advanced analytics**: Data warehouse, BI tools
 - **Multi-language**: i18n support
+- **Multi-tenant**: Support multiple organizations
+
+### Monitoring & Observability (Phase 6)
+- **Application logs**: Structured logging (JSON format)
+- **Metrics**: Prometheus + Grafana
+- **Error tracking**: Sentry or similar
+- **Uptime monitoring**: UptimeRobot or Pingdom
+- **Performance monitoring**: New Relic or DataDog

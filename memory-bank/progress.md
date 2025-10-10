@@ -17,7 +17,7 @@
 - [x] Setup backend (FastAPI + PostgreSQL)
   - [x] Backend structure created
   - [x] Dependencies installed (FastAPI, PostgreSQL, SQLAlchemy, Alembic, JWT, Bcrypt)
-  - [x] Database connection configured
+  - [x] Database connection configured (environment-based)
   - [x] Alembic migrations setup
   - [x] Initial migration created (users table)
   - [x] Admin user seeded (username: admin, password: admin123!)
@@ -41,12 +41,13 @@
   - [x] Protected routes working
   - [x] Frontend running at http://localhost:5173
   - [x] Tailwind PostCSS error resolved
-- [ ] Docker Compose configuration
 - [ ] Database schema creation for recipients, couriers, assignments
 - [ ] Enable PostGIS extension (postponed until recipients table)
 - [ ] Seed regional data (provinces, cities, districts, villages)
 
 **Deliverable**: Working authentication + project skeleton (Backend & Frontend 100% Complete ✅)
+
+**Note**: Docker/containerization postponed to Phase 6. All development uses local services with environment-based configuration for easy containerization later.
 
 #### Sprint 1.2: CRUD Recipients (5 days) - ⏳ Pending
 **Target**: Complete recipient management
@@ -180,19 +181,56 @@
 
 ---
 
-### Phase 6: Deployment & Handover (Week 9) - ⏳ Not Started
+### Phase 6: Containerization, Deployment & Handover (Week 9) - ⏳ Not Started
 
-#### Sprint 6.1: Deployment (3 days) - ⏳ Pending
-**Target**: Live production system
+#### Sprint 6.1: Containerization & Deployment (3 days) - ⏳ Pending
+**Target**: Containerized application + live production system
 
+**Containerization:**
+- [ ] Create Dockerfile for backend
+  - [ ] Multi-stage build for optimization
+  - [ ] Python dependencies installation
+  - [ ] Environment variable configuration
+  - [ ] Health check endpoint
+- [ ] Create Dockerfile for frontend
+  - [ ] Build static assets
+  - [ ] Nginx configuration for serving
+  - [ ] Environment variable injection
+- [ ] Create Docker Compose configuration
+  - [ ] Backend service definition
+  - [ ] Frontend service definition
+  - [ ] PostgreSQL service with PostGIS
+  - [ ] Volume management for data persistence
+  - [ ] Network configuration
+  - [ ] Environment file templates
+- [ ] Test containerized application locally
+  - [ ] Verify all services start correctly
+  - [ ] Test inter-service communication
+  - [ ] Validate database migrations in container
+  - [ ] Check environment variable loading
+
+**Deployment:**
 - [ ] Production environment setup
+  - [ ] Choose hosting provider (AWS/GCP/DigitalOcean/Railway)
+  - [ ] Configure server/cloud resources
+  - [ ] Set up domain and DNS
 - [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Environment variables configuration
-- [ ] Database migration to production
-- [ ] Google Maps API production keys
-- [ ] SSL certificate setup
-- [ ] Monitoring & logging setup
-- [ ] Backup strategy implementation
+  - [ ] Automated testing on PR
+  - [ ] Docker image building
+  - [ ] Container registry push
+  - [ ] Automated deployment on merge
+- [ ] Production configuration
+  - [ ] Environment variables setup
+  - [ ] Database migration to production
+  - [ ] Google Maps API production keys
+  - [ ] SSL certificate setup (Let's Encrypt)
+- [ ] Monitoring & operations
+  - [ ] Logging setup (application logs)
+  - [ ] Monitoring setup (uptime, performance)
+  - [ ] Backup strategy implementation
+  - [ ] Disaster recovery plan
+
+**Deliverable**: Containerized application + live production system
 
 #### Sprint 6.2: Documentation & Training (2 days) - ⏳ Pending
 **Target**: Complete documentation + training
@@ -200,12 +238,16 @@
 - [ ] User manual (Bahasa Indonesia)
 - [ ] API documentation (Swagger/OpenAPI)
 - [ ] Developer README
+  - [ ] Local development setup
+  - [ ] Docker setup instructions
+  - [ ] Environment variable reference
+  - [ ] Deployment guide
 - [ ] Admin training session
 - [ ] Video tutorials (optional)
 - [ ] Handover meeting
 - [ ] Support plan
 
-**Deliverable**: Live production system + documentation
+**Deliverable**: Complete documentation + trained users
 
 ---
 
@@ -392,6 +434,11 @@ All features listed in PRD need implementation:
 ## Notes
 
 ### Recent Changes
+- **2025-10-10 16:30 WIB**: Memory bank revised for containerization strategy ✅
+  - Docker/containerization postponed to Phase 6 (end of project)
+  - Development approach updated to use environment-based configuration
+  - All services configured via .env files for easy containerization later
+  - Focus shifted to completing all functionality first
 - **2025-10-10 15:40 WIB**: Frontend setup completed ✅
   - React + Vite + TypeScript project initialized
   - Tailwind CSS v4 configured with @tailwindcss/postcss
@@ -401,7 +448,7 @@ All features listed in PRD need implementation:
   - Tailwind PostCSS error resolved
 - **2025-10-10**: Backend setup completed ✅
   - FastAPI backend structure created
-  - PostgreSQL database configured
+  - PostgreSQL database configured with environment variables
   - User authentication implemented and tested
   - Admin user seeded successfully
   - Server running at http://localhost:8000
@@ -416,3 +463,6 @@ All features listed in PRD need implementation:
 - Maintain >80% test coverage
 - Document complex algorithms (CVRP, TSP)
 - Keep activeContext.md updated with current decisions
+- **Use environment variables for ALL configuration** - no hardcoded values
+- **All service connections must be configurable** - prepare for containerization
+- **No absolute file paths** - use relative paths or environment variables
