@@ -1,0 +1,325 @@
+# Gitignore for Rizky - Sembako Delivery Assignment Dashboard
+# FastAPI + React + PostgreSQL + PostGIS Project
+
+# ============================================
+# Python Backend
+# ============================================
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+.Python
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / Packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.log
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ============================================
+# Node.js Frontend
+# ============================================
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Production build
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# Testing
+coverage/
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Lock files (optional - comment out if you want to track them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================
+# Environment Variables & Secrets
+# ============================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# API Keys & Secrets
+secrets/
+*.pem
+*.key
+*.crt
+*.cert
+
+# ============================================
+# Database
+# ============================================
+
+# PostgreSQL
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+postgres-data/
+
+# Database dumps
+*.dump
+*.backup
+
+# Alembic migration cache
+alembic/versions/__pycache__/
+
+# ============================================
+# Docker
+# ============================================
+
+# Docker volumes
+docker-volumes/
+.docker/
+
+# Docker Compose override (for local development)
+docker-compose.override.yml
+
+# ============================================
+# IDE & Editors
+# ============================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================
+# OS Files
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================
+# Logs & Temporary Files
+# ============================================
+
+# Logs
+logs/
+*.log
+log/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+*.tmp
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# ============================================
+# Build Artifacts
+# ============================================
+
+# Backend
+backend/build/
+backend/dist/
+backend/*.egg-info/
+
+# Frontend
+frontend/build/
+frontend/dist/
+frontend/.next/
+frontend/out/
+
+# ============================================
+# Testing & Coverage
+# ============================================
+
+# Coverage reports
+.nyc_output/
+coverage/
+*.lcov
+
+# Test results
+test-results/
+playwright-report/
+
+# ============================================
+# Project-Specific
+# ============================================
+
+# Regional data seed files (large files)
+backend/data/seed/*.json
+backend/data/seed/*.csv
+
+# Generated documentation
+docs/build/
+docs/_build/
+site/
+
+# Static files
+static/
+staticfiles/
+media/
+
+# Uploads
+uploads/
+
+# ============================================
+# Keep Important Files
+# ============================================
+
+# Keep example environment files
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Keep configuration files
+!.clinerules
+!.clineignore
+!.gitignore
+
+# Keep documentation
+!README.md
+!prd.md
+
+# Keep memory-bank
+!memory-bank/
+!memory-bank/**
+
+# Keep Docker files
+!Dockerfile
+!docker-compose.yml
+!docker-compose.yaml
+!.dockerignore
+
+# Keep CI/CD
+!.github/
+!.github/**
+
+# Keep configuration
+!alembic.ini
+!pytest.ini
+!pyproject.toml
+!vite.config.js
+!tailwind.config.js
+!postcss.config.js
+!tsconfig.json
+!package.json
+!requirements.txt

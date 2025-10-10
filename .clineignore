@@ -1,0 +1,235 @@
+# Cline Ignore File
+# Files and directories that Cline should ignore when analyzing the project
+
+# ============================================
+# Dependencies & Package Managers
+# ============================================
+
+# Python
+venv/
+env/
+ENV/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================
+# Build Artifacts
+# ============================================
+
+# Frontend builds
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.cache/
+
+# Backend builds
+backend/build/
+backend/dist/
+
+# ============================================
+# Database & Data
+# ============================================
+
+# PostgreSQL
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+postgres-data/
+
+# Database dumps
+*.dump
+*.backup
+
+# Migration cache
+alembic/versions/__pycache__/
+
+# ============================================
+# Environment & Configuration
+# ============================================
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================
+# Logs & Temporary Files
+# ============================================
+
+# Logs
+logs/
+*.log
+log/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+*.tmp
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ============================================
+# Docker & Containers
+# ============================================
+
+# Docker volumes
+docker-volumes/
+.docker/
+
+# Don't ignore Dockerfile and docker-compose.yaml
+!Dockerfile
+!docker-compose.yml
+!docker-compose.yaml
+
+# ============================================
+# Testing & Coverage
+# ============================================
+
+coverage/
+.coverage.*
+.nyc_output/
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ============================================
+# Production & Deployment
+# ============================================
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.cert
+
+# Production builds
+build/
+dist/
+
+# ============================================
+# OS & System Files
+# ============================================
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Large Files & Media (if applicable)
+# ============================================
+
+# Videos
+*.mp4
+*.avi
+*.mov
+*.wmv
+
+# Large images
+*.psd
+*.ai
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ============================================
+# Project-Specific
+# ============================================
+
+# Regional data seed files (can be large)
+backend/data/seed/*.json
+backend/data/seed/*.csv
+
+# Generated documentation
+docs/build/
+docs/_build/
+
+# Static files (if generated)
+static/
+staticfiles/
+
+# ============================================
+# Keep Important Files
+# ============================================
+
+# Explicitly include important config files
+!.clinerules
+!.clineignore
+!.gitignore
+!README.md
+!requirements.txt
+!package.json
+!pyproject.toml
+!alembic.ini
+!vite.config.js
+!tailwind.config.js
+!tsconfig.json
+
+# Keep all memory-bank files
+!memory-bank/
+!memory-bank/**
+
+# Keep PRD
+!prd.md
