@@ -3,8 +3,8 @@
 ## Project Status Overview
 
 **Current Phase**: Phase 1 - Foundation & Auth (**✅ SPRINT 1.1 COMPLETED**, **🔄 SPRINT 1.2 BACKEND COMPLETED**)  
-**Overall Progress**: 48% (Sprint 1.1 Complete + Sprint 1.2 Backend Complete)  
-**Last Updated**: October 11, 2025 - 05:22 WIB
+**Overall Progress**: 55% (Sprint 1.1 Complete + Sprint 1.2 Backend Complete + Frontend 50% Complete)  
+**Last Updated**: October 12, 2025 - 05:50 WIB
 
 ## Development Phases
 
@@ -101,17 +101,18 @@
 - [x] **35/35 tests passing (100%)**
 - [x] **90.93% code coverage** (exceeds 80% target)
 
-**Frontend (⏳ PENDING):**
-- [ ] Frontend: Recipient list page with table
-- [ ] Search, filter, sort, pagination UI
+**Frontend (🔄 IN PROGRESS):**
+- [x] Frontend: Recipient list page with table
+- [x] Search, filter, sort, pagination UI
+- [x] Delete (single & bulk) UI
+- [x] Sidebar navigation component
 - [ ] Create/Update recipient forms
 - [ ] Regional dropdown cascading
 - [ ] Google Maps coordinate picker
-- [ ] Delete (single & bulk) UI
 - [ ] Recipient detail page with map
 - [ ] Status history table
 
-**Deliverable**: Complete recipient management (Backend ✅ Complete, Frontend ⏳ Pending)
+**Deliverable**: Complete recipient management (Backend ✅ Complete, Frontend 🔄 50% Complete)
 
 ---
 
@@ -498,6 +499,30 @@ All features listed in PRD need implementation:
 ## Notes
 
 ### Recent Changes
+- **2025-10-12 05:50 WIB**: Sprint 1.2 Frontend Progress - Recipient List + Sidebar Navigation 🔄
+  - **Recipient List Page Implemented**:
+    - Full CRUD UI with shadcn/ui Table component
+    - Search, filter (by status), pagination working
+    - Bulk delete with checkboxes and confirmation dialog
+    - Toast notifications for user feedback
+    - StatusBadge component with color-coded status display
+    - Fixed SelectContent transparent background issue (bg-white)
+    - API integration with recipientService
+    - Responsive table layout
+  - **Sidebar Navigation Implemented**:
+    - Installed shadcn/ui Sidebar components (8 new files)
+    - Created AppSidebar with navigation menu (Dashboard, Penerima, Pengantar, Assignment)
+    - Created MainLayout wrapper with SidebarProvider and SidebarInset
+    - Integrated lucide-react icons
+    - Active state detection using useLocation hook
+    - Collapsible sidebar with keyboard shortcut (Ctrl/Cmd+B)
+    - User info and logout button in sidebar footer
+    - Responsive mobile/desktop behavior
+    - Fixed import path issues (@/utils/cn)
+    - Removed tw-animate-css import from index.css
+  - **New Components**: AppSidebar, MainLayout, StatusBadge, RecipientList
+  - **New Services**: recipientService.ts
+  - **Sprint 1.2 Frontend: 50% Complete**
 - **2025-10-11 05:22 WIB**: Sprint 1.2 Backend completed ✅
   - **All 35 tests passing (100%)**
   - **90.93% code coverage achieved**

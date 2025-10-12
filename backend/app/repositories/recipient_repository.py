@@ -92,11 +92,22 @@ class RecipientRepository:
         total_count = query.count()
         
         # Apply sorting
-        sort_column = getattr(Recipient, sort_by, Recipient.created_at)
-        if sort_order == "desc":
-            query = query.order_by(sort_column.desc())
+        # Handle sorting by related fields (province.name, city.name)
+        if sort_by == "province.name":
+            query = query.join(Province).order_by(
+                Province.name.desc() if sort_order == "desc" else Province.name.asc()
+            )
+        elif sort_by == "city.name":
+            query = query.join(City).order_by(
+                City.name.desc() if sort_order == "desc" else City.name.asc()
+            )
         else:
-            query = query.order_by(sort_column.asc())
+            # Default sorting by recipient columns
+            sort_column = getattr(Recipient, sort_by, Recipient.created_at)
+            if sort_order == "desc":
+                query = query.order_by(sort_column.desc())
+            else:
+                query = query.order_by(sort_column.asc())
         
         # Apply pagination
         offset = (page - 1) * per_page

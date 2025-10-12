@@ -119,3 +119,20 @@ class RecipientStatusHistoryResponse(BaseModel):
 class BulkDeleteRequest(BaseModel):
     """Schema for bulk delete request."""
     ids: list[UUID] = Field(..., min_length=1)
+
+
+class RecipientFilters(BaseModel):
+    """Schema for recipient filtering and sorting."""
+    search: Optional[str] = None
+    status: Optional[RecipientStatus] = None
+    province_id: Optional[int] = None
+    city_id: Optional[int] = None
+    sort_by: str = 'created_at'
+    sort_order: str = 'desc'
+    
+    @field_validator('sort_order')
+    @classmethod
+    def validate_sort_order(cls, v):
+        if v not in ['asc', 'desc']:
+            raise ValueError('sort_order must be "asc" or "desc"')
+        return v
