@@ -103,7 +103,7 @@ def test_user(db_session) -> User:
 def auth_headers(client, test_user) -> dict:
     """Get authentication headers with JWT token."""
     response = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         data={"username": "testuser", "password": "testpass123"}
     )
     token = response.json()["access_token"]

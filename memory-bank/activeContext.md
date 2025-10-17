@@ -2,11 +2,11 @@
 
 ## Current Status
 
-**Project Phase**: Phase 1 - Foundation & Auth (**✅ SPRINT 1.1 COMPLETED**)
-**Date**: October 10, 2025 - 17:35 WIB
-**Stage**: Sprint 1.1 Complete - Ready for Sprint 1.2 ✅
+**Project Phase**: Phase 2A - Assignment Creation Flow (**✅ SPRINT 2.1 COMPLETED**)
+**Date**: October 17, 2025 - 03:02 WIB
+**Stage**: Sprint 2.1 Complete - Ready for Sprint 2A.1 (Route Optimization) ✅
 
-The RizQ project has completed Sprint 1.1 with full-stack authentication AND database schema creation with PostGIS support. All 10 database tables are now created and Jabodetabek regional data is seeded. Backend API running at http://localhost:8000 and frontend at http://localhost:5173.
+The RizQ project has completed Sprint 2.1 with full courier management (CRUD). Backend API provides 6 courier endpoints with 42/42 tests passing (98.51% coverage). Frontend features complete courier list and create/edit forms. Project roadmap has been restructured to prioritize Assignment Creation Flow (Phase 2A) before Assignment Management (Phase 2B). Backend API running at http://localhost:8000 and frontend at http://localhost:5173.
 
 ## Current Work Focus
 
@@ -19,7 +19,7 @@ The RizQ project has completed Sprint 1.1 with full-stack authentication AND dat
 6. ✅ Frontend setup (React + Vite + Tailwind + shadcn/ui)
    - Vite + React + TypeScript project initialized
    - Tailwind CSS v4 with @tailwindcss/postcss configured
-   - shadcn/ui components created (Button, Input, Label, Card)
+   - shadcn/ui components created (Button, Input, Label, Card, Table, Dialog, Select, Badge, Sidebar)
    - React Router DOM with protected routes
    - Axios API service with JWT interceptors
    - Authentication context provider
@@ -38,6 +38,34 @@ The RizQ project has completed Sprint 1.1 with full-stack authentication AND dat
    - 3 provinces: DKI Jakarta, Jawa Barat, Banten
    - 14 cities/regencies across Jabodetabek metropolitan area
    - Seed script created for reproducible data population
+9. ✅ Recipient CRUD Backend (Sprint 1.2)
+   - 7 RESTful API endpoints with full CRUD operations
+   - Repository pattern implementation with RecipientRepository
+   - PostGIS location handling (geoalchemy2 + shapely)
+   - Status validation logic for business rules
+   - 35/35 tests passing with 90.93% code coverage
+   - Production-ready with comprehensive error handling
+10. ✅ Regional API Backend
+   - GET /api/v1/regions/provinces - List all provinces
+   - GET /api/v1/regions/cities?province_id={id} - List cities with filtering
+   - Fixed UUID type mismatch bug (changed to int for region IDs)
+11. ✅ Recipient List Frontend (Sprint 1.2)
+   - Complete table UI with shadcn/ui components
+   - Search bar with debounced input (500ms)
+   - 3 filter dropdowns: Status, Province, City (cascading)
+   - 6 sortable columns: Name, Phone, Status, Provinsi, Kab/Kota, Jumlah Paket
+   - Pagination controls (10/30/50/100 per page)
+   - Bulk delete with checkbox selection and confirmation dialog
+   - Row-level navigation to detail pages
+   - Toast notifications for user feedback
+   - StatusBadge component with color-coded display
+12. ✅ Sidebar Navigation
+   - Collapsible sidebar with keyboard shortcut (Ctrl/Cmd+B)
+   - Navigation menu: Dashboard, Penerima, Pengantar, Assignment
+   - Active state detection with highlight
+   - User info and logout button in footer
+   - Responsive mobile/desktop behavior
+   - MainLayout wrapper for consistent structure
 
 ### Database Tables Created:
 **Regional Hierarchy (Simplified - Indonesian administrative divisions):**
@@ -65,8 +93,19 @@ The RizQ project has completed Sprint 1.1 with full-stack authentication AND dat
 - ⏳ Recipients: Not yet seeded
 
 ### Next Tasks
-9. ✅ Seed regional data (**COMPLETED** - Jabodetabek only)
-10. ⏳ Begin CRUD Recipients implementation (Sprint 1.2) - **NEXT SPRINT**
+13. ✅ CRUD Couriers (Sprint 2.1) - **COMPLETED**
+    - ✅ Backend: Courier API endpoints (CRUD) - 6 endpoints
+    - ✅ Backend: 42/42 tests passing (98.51% API, 100% repository coverage)
+    - ✅ Frontend: Courier list with search, sort, pagination
+    - ✅ Frontend: Courier create/edit forms with validation
+    
+14. ⏳ Route Optimization Backend (Sprint 2A.1) - **NEXT SPRINT**
+    - Install OR-Tools and dependencies
+    - Google Routes API integration
+    - TSP optimization service
+    - CVRP optimization service
+    - POST /api/v1/optimize endpoint
+    - Unit tests for optimization logic
 
 **Note**: Docker/containerization postponed to Phase 6 (end of project). Focus is on completing all functionality first using local development environment.
 
@@ -186,17 +225,30 @@ The RizQ project has completed Sprint 1.1 with full-stack authentication AND dat
 - ✅ Database schema with PostGIS
 - ✅ Regional data seeding (Jabodetabek)
 
-### Short-term (Weeks 2-3) - Sprint 1.2 - NEXT
-- CRUD Recipients with geographic data
-- Regional data dropdowns (cascading: province → city)
-- Google Maps integration for coordinate picking
-- Recipient list with search, filter, sort, pagination
-- Recipient detail page with map view
+### Short-term (Weeks 2-3) - Sprint 1.2 ✅ COMPLETED
+- ✅ CRUD Recipients backend with geographic data
+- ✅ Regional API endpoints (provinces and cities)
+- ✅ Regional data dropdowns (cascading: province → city)
+- ✅ Recipient list with search, filter, sort, pagination
+- ✅ Sidebar navigation with collapsible menu
+- ✅ StatusBadge component
+- ✅ Bulk delete operations
+- ✅ Fixed CORS and type mismatch bugs
+- Note: Google Maps coordinate picker and recipient detail page moved to Sprint 2.1
 
-### Medium-term (Weeks 3-4)
-- CRUD Couriers
-- Basic assignment viewing
+### Short-term (Weeks 3-4) - Sprint 2.1 ✅ COMPLETED
+- ✅ CRUD Couriers (Backend + Frontend)
+- ✅ Courier repository pattern implementation
+- ✅ Courier tests (42/42 passing, >95% coverage)
+- ✅ Courier list page with advanced features
+- ✅ Courier create/edit forms with validation
+
+### Short-term (Weeks 4-5) - Sprint 2A.1 - NEXT
 - Route optimization integration (TSP + CVRP)
+- Google Routes API setup
+- OR-Tools implementation
+- Optimization endpoint (POST /api/v1/optimize)
+- Performance benchmarking
 
 ## Important Patterns & Preferences
 
@@ -440,7 +492,51 @@ When development begins, ensure:
 - Seed scripts created for reproducible data population
 - Verification scripts for data validation
 
+**Sprint 1.2 Achievements**: ✅ COMPLETED
+- Backend: 9 RESTful API endpoints (7 recipient + 2 region)
+- Backend: Repository pattern with RecipientRepository
+- Backend: 35/35 tests passing, 90.93% code coverage
+- Frontend: Complete recipient list page with table
+- Frontend: Advanced filtering (status, province, city)
+- Frontend: 6 sortable columns with visual indicators
+- Frontend: Pagination (10/30/50/100 per page)
+- Frontend: Bulk operations with confirmation dialogs
+- Frontend: Sidebar navigation with collapsible menu
+- Frontend: StatusBadge component for color-coded statuses
+- Frontend: Toast notifications for user feedback
+- Bug Fixes: CORS UUID type mismatch, Select dropdown display issues
+- New Files: 8 backend files (API, schemas, repository, tests), 7 frontend files (pages, components, services, types)
+
+**Sprint 2.1 Achievements**: ✅ COMPLETED
+- Backend: 6 courier API endpoints (GET, POST, PUT, DELETE, bulk delete)
+- Backend: CourierRepository with full CRUD operations
+- Backend: 42/42 tests passing (19 repository + 23 API)
+- Backend: 98.51% API coverage, 100% repository coverage
+- Backend: Phone number uniqueness validation
+- Frontend: CourierList page (search, sort, pagination, delete)
+- Frontend: CourierForm page (dual-mode: create & edit)
+- Frontend: Client-side validation (required, length, format)
+- Frontend: Server-side error handling (duplicate phone detection)
+- Frontend: Loading states & toast notifications
+- Frontend: Routes: /couriers, /couriers/new, /couriers/:id/edit
+- New Files: 5 backend files (API, repository, schema, tests, seed), 4 frontend files (types, service, pages)
+
+**Roadmap Restructure**: ✅ COMPLETED
+- **Phase 2A (Priority 1)**: Assignment Creation Flow
+  - Sprint 2A.1: Route Optimization Backend (5 days)
+  - Sprint 2A.2: Wizard Step 1 - Recipient Selection & Map (5 days)
+  - Sprint 2A.3: Wizard Step 2 - Courier Selection (3 days)
+  - Sprint 2A.4: Wizard Step 3 - Preview & Drag-Drop (5 days)
+  - Sprint 2A.5: Finalization & Save (2 days)
+- **Phase 2B (Priority 2)**: Assignment Management (CRUD)
+  - Sprint 2B.1: Assignment List & Detail (3 days)
+  - Sprint 2B.2: Assignment Edit & Status (3 days)
+  - Sprint 2B.3: Assignment Actions (Delete, WhatsApp) (2 days)
+- **Phase 3**: Polish & Testing (5 days)
+- **Phase 4**: Containerization & Deployment (5 days)
+
 **Development Strategy**: 
-- Phase 1-5: Local development with environment-based configuration
-- Phase 6: Containerization and deployment
+- Phase 1-3: Local development with environment-based configuration
+- Phase 4: Containerization and deployment
 - All code is container-ready (no hardcoded values, environment-based config)
+- **New Focus**: Complete assignment creation flow before CRUD operations

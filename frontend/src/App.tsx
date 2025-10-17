@@ -6,6 +6,8 @@ import { MainLayout } from '@/components/layout/MainLayout'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import { RecipientList } from '@/pages/RecipientList'
+import CourierList from '@/pages/CourierList'
+import CourierForm from '@/pages/CourierForm'
 import { Toaster } from '@/components/ui/sonner'
 
 function App() {
@@ -31,6 +33,36 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <RecipientList />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/couriers"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CourierList />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/couriers/new"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CourierForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/couriers/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CourierForm />
                   </MainLayout>
                 </ProtectedRoute>
               }

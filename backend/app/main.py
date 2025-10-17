@@ -5,7 +5,7 @@ RizQ - Sembako Delivery Assignment Dashboard
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import auth, recipients, regions
+from app.api import auth, recipients, regions, couriers
 
 # Create FastAPI application
 app = FastAPI(
@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(recipients.router, prefix="/api/v1")
 app.include_router(regions.router, prefix="/api/v1/regions")
+app.include_router(couriers.router, prefix="/api/v1")
 
 
 @app.get("/health")
