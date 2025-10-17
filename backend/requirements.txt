@@ -10,3 +10,6 @@ python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.6
 python-dotenv>=1.0.0
+ortools>=9.8.3296
+googlemaps>=4.10.0
+shapely>=2.0.2

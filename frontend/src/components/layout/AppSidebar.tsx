@@ -1,4 +1,4 @@
-import { Package, Truck, ClipboardList, LogOut, Home } from 'lucide-react'
+import { Package, Truck, ClipboardList, LogOut, Home, Plus } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -21,6 +21,10 @@ const navItems = [
   { title: 'Assignment', url: '/assignments', icon: ClipboardList },
 ]
 
+const actionItems = [
+  { title: 'Buat Assignment Baru', url: '/assignments/new', icon: Plus },
+]
+
 export function AppSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -41,6 +45,30 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={location.pathname === item.url}
+                  >
+                    <a href={item.url} onClick={(e) => {
+                      e.preventDefault()
+                      navigate(item.url)
+                    }}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Actions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {actionItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 

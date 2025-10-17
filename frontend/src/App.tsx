@@ -8,6 +8,7 @@ import Dashboard from '@/pages/Dashboard'
 import { RecipientList } from '@/pages/RecipientList'
 import CourierList from '@/pages/CourierList'
 import CourierForm from '@/pages/CourierForm'
+import { AssignmentWizard } from '@/features/assignments/wizard/AssignmentWizard'
 import { Toaster } from '@/components/ui/sonner'
 
 function App() {
@@ -63,6 +64,16 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <CourierForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assignments/new"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <AssignmentWizard />
                   </MainLayout>
                 </ProtectedRoute>
               }
