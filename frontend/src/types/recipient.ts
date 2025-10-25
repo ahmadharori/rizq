@@ -2,13 +2,15 @@
  * Type definitions for Recipient domain
  */
 
-export enum RecipientStatus {
-  UNASSIGNED = 'Unassigned',
-  ASSIGNED = 'Assigned',
-  DELIVERY = 'Delivery',
-  DONE = 'Done',
-  RETURN = 'Return'
-}
+export const RecipientStatus = {
+  UNASSIGNED: 'Unassigned',
+  ASSIGNED: 'Assigned',
+  DELIVERY: 'Delivery',
+  DONE: 'Done',
+  RETURN: 'Return'
+} as const;
+
+export type RecipientStatus = typeof RecipientStatus[keyof typeof RecipientStatus];
 
 export interface Location {
   lat: number;

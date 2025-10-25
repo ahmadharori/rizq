@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # Application
     DEBUG: bool = True
     ENVIRONMENT: str = "development"
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://localhost:4173"
     
     # API Keys (optional for now)
     GOOGLE_MAPS_API_KEY: str = ""

@@ -10,6 +10,12 @@ const initialState: WizardState = {
   capacityPerCourier: null,
   selectedCourierIds: [],
   assignments: [],
+  removedRecipientIds: [],
+  assignmentMetadata: {
+    assignmentName: '',
+    deliveryDate: null,
+    notes: '',
+  },
   recipients: [],
   couriers: [],
 };
@@ -92,6 +98,79 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_COURIERS':
       return { ...state, couriers: action.couriers };
 
+    case 'MOVE_RECIPIENT_BETWEEN_ASSIGNMENTS':
+      return {
+        ...state,
+        assignments: state.assignments.map(assignment => {
+          // Remove from source assignment
+          if (assignment.id === action.fromAssignmentId) {
+            return {
+              ...assignment,
+              recipientIds: assignment.recipientIds.filter(id => id !== action.recipientId)
+            };
+          }
+          // Add to target assignment
+          if (assignment.id === action.toAssignmentId) {
+            const newIds = [...assignment.recipientIds];
+            newIds.splice(action.newIndex, 0, action.recipientId);
+            return { ...assignment, recipientIds: newIds };
+          }
+          return assignment;
+        })
+      };
+
+    case 'REORDER_RECIPIENTS_IN_ASSIGNMENT':
+      return {
+        ...state,
+        assignments: state.assignments.map(a =>
+          a.id === action.assignmentId
+            ? { ...a, recipientIds: action.recipientIds }
+            : a
+        )
+      };
+
+    case 'REMOVE_RECIPIENT_FROM_ASSIGNMENT':
+      return {
+        ...state,
+        assignments: state.assignments.map(a =>
+          a.id === action.assignmentId
+            ? { ...a, recipientIds: a.recipientIds.filter(id => id !== action.recipientId) }
+            : a
+        ),
+        removedRecipientIds: [...state.removedRecipientIds, action.recipientId]
+      };
+
+    case 'ADD_RECIPIENT_TO_ASSIGNMENT':
+      return {
+        ...state,
+        assignments: state.assignments.map(a => {
+          if (a.id === action.assignmentId) {
+            const newIds = [...a.recipientIds];
+            if (action.index !== undefined) {
+              newIds.splice(action.index, 0, action.recipientId);
+            } else {
+              newIds.push(action.recipientId);
+            }
+            return { ...a, recipientIds: newIds };
+          }
+          return a;
+        }),
+        removedRecipientIds: state.removedRecipientIds.filter(id => id !== action.recipientId)
+      };
+
+    case 'UPDATE_ROUTE_DATA':
+      return {
+        ...state,
+        assignments: state.assignments.map(a =>
+          a.id === action.assignmentId
+            ? { ...a, routeData: action.routeData }
+            : a
+        )
+      };
+
+    case 'SET_ASSIGNMENT_METADATA':
+      return { ...state, assignmentMetadata: action.metadata };
+
     case 'RESET_WIZARD':
       return initialState;
 
@@ -166,6 +245,44 @@ export const useWizardState = () => {
 
     resetWizard: useCallback(() => {
       dispatch({ type: 'RESET_WIZARD' });
+    }, []),
+
+    // Step 3 specific actions
+    moveRecipientBetweenAssignments: useCallback((
+      recipientId: string,
+      fromAssignmentId: string,
+      toAssignmentId: string,
+      newIndex: number
+    ) => {
+      dispatch({
+        type: 'MOVE_RECIPIENT_BETWEEN_ASSIGNMENTS',
+        recipientId,
+        fromAssignmentId,
+        toAssignmentId,
+        newIndex
+      });
+    }, []),
+
+    reorderRecipientsInAssignment: useCallback((assignmentId: string, recipientIds: string[]) => {
+      dispatch({ type: 'REORDER_RECIPIENTS_IN_ASSIGNMENT', assignmentId, recipientIds });
+    }, []),
+
+    removeRecipientFromAssignment: useCallback((assignmentId: string, recipientId: string) => {
+      dispatch({ type: 'REMOVE_RECIPIENT_FROM_ASSIGNMENT', assignmentId, recipientId });
+    }, []),
+
+    addRecipientToAssignment: useCallback((assignmentId: string, recipientId: string, index?: number) => {
+      dispatch({ type: 'ADD_RECIPIENT_TO_ASSIGNMENT', assignmentId, recipientId, index });
+    }, []),
+
+    updateRouteData: useCallback((assignmentId: string, routeData: WizardState['assignments'][0]['routeData']) => {
+      if (routeData) {
+        dispatch({ type: 'UPDATE_ROUTE_DATA', assignmentId, routeData });
+      }
+    }, []),
+
+    setAssignmentMetadata: useCallback((metadata: WizardState['assignmentMetadata']) => {
+      dispatch({ type: 'SET_ASSIGNMENT_METADATA', metadata });
     }, []),
 
     // Navigation helpers

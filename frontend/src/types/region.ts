@@ -8,7 +8,7 @@ export interface Region {
   name: string;
 }
 
-export interface Province extends Region {}
+export type Province = Region
 
 export interface City extends Region {
   province_id: string;

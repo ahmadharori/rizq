@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Users, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ManualModeView } from './ManualModeView';
 import { RekomendasiModeView } from './RekomendasiModeView';
 import type { WizardState } from '@/types/wizard';
 import type { CourierListItem } from '@/types/courier';
 import * as courierService from '@/services/courierService';
-import { cn } from '@/utils/cn';
 
 interface Step2SelectCouriersProps {
   state: WizardState;
@@ -19,8 +17,6 @@ interface Step2SelectCouriersProps {
 export const Step2SelectCouriers = ({
   state,
   actions,
-  onNext,
-  onBack,
 }: Step2SelectCouriersProps) => {
   const [couriers, setCouriers] = useState<CourierListItem[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(true);
@@ -32,7 +28,12 @@ export const Step2SelectCouriers = ({
         setIsLoadingCouriers(true);
         const response = await courierService.getCouriers({ page: 1, per_page: 100 });
         setCouriers(response.items);
-        actions.setCouriers(response.items);
+        // Convert CourierListItem to Courier by adding updated_at field
+        const couriersWithUpdatedAt = response.items.map(item => ({
+          ...item,
+          updated_at: item.created_at, // Use created_at as fallback for updated_at
+        }));
+        actions.setCouriers(couriersWithUpdatedAt);
       } catch (error) {
         toast.error('Gagal memuat data pengantar');
         console.error('Failed to fetch couriers:', error);
@@ -46,71 +47,8 @@ export const Step2SelectCouriers = ({
   }, []); // Empty dependency array - only fetch once on mount
 
   // Validation logic
-  const validateManualMode = (): boolean => {
-    // Check if all selected recipients are assigned to groups
-    const assignedRecipientIds = new Set<string>();
-    state.manualGroups.forEach(group => {
-      group.recipientIds.forEach(id => assignedRecipientIds.add(id));
-    });
 
-    if (assignedRecipientIds.size !== state.selectedRecipientIds.length) {
-      toast.error('Semua penerima harus dimasukkan ke dalam kelompok');
-      return false;
-    }
 
-    // Check if all groups have at least one recipient
-    const emptyGroup = state.manualGroups.find(g => g.recipientIds.length === 0);
-    if (emptyGroup) {
-      toast.error(`Kelompok "${emptyGroup.name}" tidak memiliki penerima`);
-      return false;
-    }
-
-    // Check if all groups have assigned courier
-    const groupWithoutCourier = state.manualGroups.find(g => !g.courierId);
-    if (groupWithoutCourier) {
-      toast.error(`Kelompok "${groupWithoutCourier.name}" belum memiliki pengantar`);
-      return false;
-    }
-
-    return true;
-  };
-
-  const validateRekomendasiMode = (): boolean => {
-    if (state.selectedCourierIds.length === 0) {
-      toast.error('Pilih minimal 1 pengantar');
-      return false;
-    }
-
-    // Check if capacity is sufficient
-    const totalPackages = state.recipients
-      .filter(r => state.selectedRecipientIds.includes(r.id))
-      .reduce((sum, r) => sum + r.num_packages, 0);
-
-    const totalCapacity = state.selectedCourierIds.length * (state.capacityPerCourier || 0);
-
-    if (totalCapacity < totalPackages) {
-      toast.error(
-        `Kapasitas tidak cukup: ${totalPackages} paket memerlukan ${Math.ceil(
-          totalPackages / (state.capacityPerCourier || 1)
-        )} pengantar dengan kapasitas ${state.capacityPerCourier} paket`
-      );
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleNext = () => {
-    // Validate based on assignment mode
-    const isValid =
-      state.assignmentMode === 'manual'
-        ? validateManualMode()
-        : validateRekomendasiMode();
-
-    if (isValid) {
-      onNext();
-    }
-  };
 
   return (
     <div className="p-6">

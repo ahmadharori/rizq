@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { WizardStepIndicator } from './WizardStepIndicator';
@@ -9,11 +9,13 @@ import { recipientService } from '@/services/recipientService';
 import { getCouriers } from '@/services/courierService';
 import { RecipientStatus } from '@/types/recipient';
 import { toast } from 'sonner';
+import { createAssignment, createBulkAssignments, type CreateAssignmentRequest } from '@/services/assignmentService';
+import optimizationService from '@/services/optimizationService';
 
 // Step components
 import { Step1ViewRecipients } from './Step1ViewRecipients';
 import { Step2SelectCouriers } from './Step2SelectCouriers';
-// import { Step3PreviewAssignment } from './Step3PreviewAssignment';
+import Step3PreviewAndEdit from './Step3PreviewAndEdit';
 
 export const AssignmentWizard = () => {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export const AssignmentWizard = () => {
   const [loadError, setLoadError] = useState(false);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [totalRecipients, setTotalRecipients] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Load recipients and couriers on mount
   useEffect(() => {
@@ -131,9 +134,23 @@ export const AssignmentWizard = () => {
     }
 
     if (state.currentStep === 2) {
-      if (state.selectedCourierIds.length === 0) {
-        alert('Pilih minimal 1 pengantar');
-        return;
+      if (state.assignmentMode === 'manual') {
+        // Manual mode: check if all groups have couriers
+        if (state.manualGroups.length === 0) {
+          alert('Buat minimal 1 kelompok');
+          return;
+        }
+        const unassignedGroup = state.manualGroups.find(g => !g.courierId);
+        if (unassignedGroup) {
+          alert(`Kelompok "${unassignedGroup.name}" belum memiliki pengantar`);
+          return;
+        }
+      } else {
+        // Rekomendasi mode: check selectedCourierIds
+        if (state.selectedCourierIds.length === 0) {
+          alert('Pilih minimal 1 pengantar');
+          return;
+        }
       }
     }
 
@@ -147,7 +164,109 @@ export const AssignmentWizard = () => {
   const handleCancel = () => {
     if (confirm('Batalkan pembuatan assignment? Data yang sudah diinput akan hilang.')) {
       actions.resetWizard();
-      navigate('/assignments');
+      navigate('/recipients');
+    }
+  };
+
+  const handleSave = async () => {
+    // Validation
+    if (!state.assignmentMetadata.assignmentName?.trim()) {
+      toast.error('Nama assignment wajib diisi');
+      return;
+    }
+
+    if (!state.assignmentMetadata.deliveryDate) {
+      toast.error('Tanggal pengantaran wajib diisi');
+      return;
+    }
+
+    if (state.assignments.length === 0) {
+      toast.error('Tidak ada assignment yang akan disimpan');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Transform wizard state to API format
+      const assignmentRequests: CreateAssignmentRequest[] = await Promise.all(
+        state.assignments.map(async (assignment) => {
+          // Calculate leg-by-leg distances for this assignment
+          const legs = await optimizationService.calculateRouteLegDistances(
+            assignment.recipientIds
+          );
+
+          const recipients = assignment.recipientIds.map((recipientId, index) => {
+            // Get distance/duration from calculated legs
+            const leg = legs[index];
+            const distanceFromPrevious = leg?.distanceMeters || 0;
+            const durationFromPrevious = leg?.durationSeconds || 0;
+
+            return {
+              recipient_id: recipientId,
+              sequence_order: index + 1,
+              distance_from_previous_meters: distanceFromPrevious,
+              duration_from_previous_seconds: durationFromPrevious,
+            };
+          });
+
+          // Calculate totals
+          const totalDistance = assignment.routeData?.totalDistanceMeters || 0;
+          const totalDuration = assignment.routeData?.totalDurationSeconds || 0;
+
+          return {
+            name: state.assignmentMetadata.assignmentName,
+            courier_id: assignment.courierId,
+            route_data: assignment.routeData,
+            total_distance_meters: totalDistance,
+            total_duration_seconds: totalDuration,
+            recipients,
+          };
+        })
+      );
+
+      // Use bulk create if multiple assignments, single create otherwise
+      let createdAssignments;
+      
+      if (assignmentRequests.length === 1) {
+        const created = await createAssignment(assignmentRequests[0]);
+        createdAssignments = [created];
+      } else {
+        createdAssignments = await createBulkAssignments({
+          assignments: assignmentRequests
+        });
+      }
+
+      // Success!
+      const successCount = createdAssignments.length;
+      const totalCount = assignmentRequests.length;
+
+      if (successCount === totalCount) {
+        toast.success(`Berhasil membuat ${successCount} assignment!`);
+      } else {
+        toast.warning(
+          `Berhasil membuat ${successCount} dari ${totalCount} assignment. Beberapa gagal disimpan.`
+        );
+      }
+
+      // Reset wizard and navigate
+      actions.resetWizard();
+      navigate('/recipients');
+
+    } catch (error: any) {
+      console.error('Save assignment failed:', error);
+      
+      const errorMessage = error.response?.data?.detail || 'Gagal menyimpan assignment. Silakan coba lagi.';
+      
+      if (typeof errorMessage === 'string') {
+        toast.error(errorMessage);
+      } else if (errorMessage.message) {
+        toast.error(errorMessage.message);
+      } else {
+        toast.error('Gagal menyimpan assignment. Silakan coba lagi.');
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -203,8 +322,7 @@ export const AssignmentWizard = () => {
           />
         );
       case 3:
-        // return <Step3PreviewAssignment state={state} actions={actions} />;
-        return <div className="p-8 text-center">Step 3 - Coming Soon</div>;
+        return <Step3PreviewAndEdit state={state} actions={actions} />;
       case 4:
         return <div className="p-8 text-center">Step 4 - Coming Soon</div>;
       default:
@@ -214,13 +332,23 @@ export const AssignmentWizard = () => {
 
   const canProceed = () => {
     if (loading) return false;
+    
     if (state.currentStep === 1) {
       if (state.selectedRecipientIds.length === 0) return false;
       if (state.assignmentMode === 'rekomendasi' && !state.capacityPerCourier) return false;
     }
+    
     if (state.currentStep === 2) {
-      if (state.selectedCourierIds.length === 0) return false;
+      if (state.assignmentMode === 'manual') {
+        // Manual mode: check if all groups have couriers
+        if (state.manualGroups.length === 0) return false;
+        if (state.manualGroups.some(g => !g.courierId)) return false;
+      } else {
+        // Rekomendasi mode: check selectedCourierIds
+        if (state.selectedCourierIds.length === 0) return false;
+      }
     }
+    
     return true;
   };
 
@@ -276,15 +404,20 @@ export const AssignmentWizard = () => {
             </Button>
           )}
 
-          {state.currentStep === 4 && (
+          {state.currentStep === 3 && (
             <Button
-              onClick={() => {
-                // TODO: Save assignment
-                alert('Save assignment - To be implemented');
-              }}
+              onClick={handleSave}
+              disabled={isSaving || !state.assignmentMetadata.assignmentName || !state.assignmentMetadata.deliveryDate}
               className="gap-2"
             >
-              Simpan Assignment
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : (
+                'Simpan Assignment'
+              )}
             </Button>
           )}
         </div>

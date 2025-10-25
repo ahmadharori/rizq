@@ -82,7 +82,8 @@ export const CityGroupedTables = ({
             </div>
 
             {/* Table */}
-            <table className="w-full">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-max">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left">
@@ -159,7 +160,8 @@ export const CityGroupedTables = ({
                   );
                 })}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         );
       })}

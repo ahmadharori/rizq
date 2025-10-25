@@ -12,10 +12,32 @@ from app.schemas.optimization import (
 )
 from app.services.optimization_service import OptimizationService
 from app.dependencies import get_current_user
+from pydantic import BaseModel
+from typing import List
+from uuid import UUID
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/optimize", tags=["optimization"])
+
+
+class DistanceMatrixLegsRequest(BaseModel):
+    """Request for leg-by-leg distance matrix calculation."""
+    recipient_ids: List[UUID]
+
+
+class DistanceMatrixLeg(BaseModel):
+    """Single leg distance/duration."""
+    distance_meters: int
+    duration_seconds: int
+
+
+class DistanceMatrixLegsResponse(BaseModel):
+    """Response with sequential leg distances."""
+    legs: List[DistanceMatrixLeg]
 
 
 @router.post(
@@ -164,3 +186,68 @@ async def optimize_cvrp(
     except Exception as e:
         logger.error(f"CVRP optimization failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
+
+
+@router.post(
+    "/distance-matrix-legs",
+    response_model=DistanceMatrixLegsResponse,
+    summary="Calculate leg-by-leg distances for sequential route"
+)
+async def calculate_distance_matrix_legs(
+    request: DistanceMatrixLegsRequest,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    db: Session = Depends(get_db)
+) -> DistanceMatrixLegsResponse:
+    """
+    Calculate leg-by-leg distance and duration for a sequential route.
+    
+    Given a list of recipient IDs in order, calculates:
+    - Distance from depot to first recipient
+    - Distance from recipient[i] to recipient[i+1] for all sequential pairs
+    
+    Returns array of legs where:
+    - legs[0] = depot → recipient[0]
+    - legs[1] = recipient[0] → recipient[1]
+    - legs[i] = recipient[i-1] → recipient[i]
+    """
+    try:
+        service = OptimizationService()
+        
+        # Get recipient locations
+        recipient_locations = service.get_recipient_locations(
+            request.recipient_ids,
+            db_session=db
+        )
+        
+        # Build full locations list: [depot, recipient1, recipient2, ...]
+        depot_location = (settings.DEPOT_LAT, settings.DEPOT_LNG)
+        all_locations = [depot_location] + recipient_locations
+        
+        # Get distance matrix
+        matrix_data = service.distance_service.get_distance_matrix(
+            origins=all_locations,
+            destinations=all_locations
+        )
+        
+        # Extract sequential legs
+        legs = []
+        for i in range(len(request.recipient_ids)):
+            # From depot (index 0) or previous recipient (index i) 
+            # to current recipient (index i+1)
+            from_idx = i
+            to_idx = i + 1
+            
+            legs.append(DistanceMatrixLeg(
+                distance_meters=matrix_data["distance_matrix"][from_idx][to_idx],
+                duration_seconds=matrix_data["duration_matrix"][from_idx][to_idx]
+            ))
+        
+        return DistanceMatrixLegsResponse(legs=legs)
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Distance matrix calculation failed: {str(e)}"
+        )

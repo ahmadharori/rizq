@@ -38,6 +38,8 @@ export interface WizardState {
   
   // Step 3: Preview & Edit
   assignments: PreviewAssignment[];
+  removedRecipientIds: string[];
+  assignmentMetadata: AssignmentMetadata;
   
   // Additional state
   recipients: Recipient[];
@@ -53,6 +55,13 @@ export interface PreviewAssignment {
   routeData?: RouteData;
 }
 
+// Assignment Metadata (name, date, notes)
+export interface AssignmentMetadata {
+  assignmentName: string;
+  deliveryDate: string | null;
+  notes: string;
+}
+
 // Route Data (from optimization API)
 export interface RouteData {
   totalDistanceMeters: number;
@@ -66,6 +75,13 @@ export interface RouteLeg {
   toLocation: { lat: number; lng: number };
   distanceMeters: number;
   durationSeconds: number;
+}
+
+// Polyline for Google Maps rendering
+export interface RoutePolyline {
+  courierId: string;
+  color: string;
+  path: Array<{ lat: number; lng: number }>;
 }
 
 // Map-related types
@@ -108,4 +124,10 @@ export type WizardAction =
   | { type: 'UPDATE_ASSIGNMENT'; assignmentId: string; assignment: Partial<PreviewAssignment> }
   | { type: 'SET_RECIPIENTS'; recipients: Recipient[] }
   | { type: 'SET_COURIERS'; couriers: Courier[] }
+  | { type: 'MOVE_RECIPIENT_BETWEEN_ASSIGNMENTS'; recipientId: string; fromAssignmentId: string; toAssignmentId: string; newIndex: number }
+  | { type: 'REORDER_RECIPIENTS_IN_ASSIGNMENT'; assignmentId: string; recipientIds: string[] }
+  | { type: 'REMOVE_RECIPIENT_FROM_ASSIGNMENT'; assignmentId: string; recipientId: string }
+  | { type: 'ADD_RECIPIENT_TO_ASSIGNMENT'; assignmentId: string; recipientId: string; index?: number }
+  | { type: 'UPDATE_ROUTE_DATA'; assignmentId: string; routeData: RouteData }
+  | { type: 'SET_ASSIGNMENT_METADATA'; metadata: AssignmentMetadata }
   | { type: 'RESET_WIZARD' };

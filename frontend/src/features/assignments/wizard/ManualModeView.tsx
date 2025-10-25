@@ -10,12 +10,11 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import type { WizardState, ManualGroup } from '@/types/wizard';
 import type { CourierListItem } from '@/types/courier';
-import type { Recipient } from '@/types/recipient';
 import { UnassignedColumn } from './kanban/UnassignedColumn';
 import { GroupColumn } from './kanban/GroupColumn';
 import { DraggableRecipientCard } from './kanban/DraggableRecipientCard';

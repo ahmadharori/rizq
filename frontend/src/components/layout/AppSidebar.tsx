@@ -22,7 +22,7 @@ const navItems = [
 ]
 
 const actionItems = [
-  { title: 'Buat Assignment Baru', url: '/assignments/new', icon: Plus },
+  { title: 'Buat Assignment Baru', url: '/assignments/create', icon: Plus },
 ]
 
 export function AppSidebar() {

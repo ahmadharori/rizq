@@ -1,4 +1,4 @@
-import type { WizardStep, StepInfo } from '@/types/wizard';
+import type { StepInfo } from '@/types/wizard';
 
 // Wizard Steps Configuration
 export const WIZARD_STEPS: StepInfo[] = [

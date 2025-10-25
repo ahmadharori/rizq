@@ -122,63 +122,64 @@ export const Step1ViewRecipients = ({
           </Button>
         </div>
 
-        {/* Map and Legend Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <div className="lg:col-span-3">
-            <MapView
-              recipients={displayRecipients}
-              selectedIds={state.selectedRecipientIds}
-              hoveredId={hoveredId}
-              onMarkerClick={handleMarkerClick}
-              onMarkerHover={handleMarkerHover}
-              showDepot={true}
-              height="500px"
-              viewMode={state.viewMode}
-              cityGroups={cityGroups}
-            />
-          </div>
-          <div className="lg:col-span-1">
-            <MapLegend viewMode={state.viewMode} recipients={displayRecipients} />
-          </div>
-        </div>
-
-        {/* Recipients Table */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex-1 max-w-sm">
-              <Input
-                placeholder="Cari penerima..."
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                disabled={isLoadingRecipients}
+        {/* Split Layout: Map (Left Sticky) + Table (Right Scrollable) */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Left Column - Map + Legend (Sticky) */}
+          <div className="lg:col-span-2">
+            <div className="sticky top-6 space-y-4">
+              <MapView
+                recipients={displayRecipients}
+                selectedIds={state.selectedRecipientIds}
+                hoveredId={hoveredId}
+                onMarkerClick={handleMarkerClick}
+                onMarkerHover={handleMarkerHover}
+                showDepot={true}
+                height="600px"
+                viewMode={state.viewMode}
+                cityGroups={cityGroups}
               />
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Tampilkan:</span>
-                <Select
-                  value={itemsPerPage.toString()}
-                  onValueChange={(value) => handleItemsPerPageChange(Number(value))}
-                  disabled={isLoadingRecipients}
-                >
-                  <SelectTrigger className="w-[80px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="30">30</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="text-sm text-gray-600">
-                {state.selectedRecipientIds.length} dari {totalRecipients} dipilih
-              </div>
+              <MapLegend viewMode={state.viewMode} recipients={displayRecipients} />
             </div>
           </div>
 
-          {/* Conditional Rendering: City Mode vs All Mode */}
+          {/* Right Column - Table (Scrollable) */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* Search and Controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1 max-w-sm">
+                <Input
+                  placeholder="Cari penerima..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  disabled={isLoadingRecipients}
+                />
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Tampilkan:</span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => handleItemsPerPageChange(Number(value))}
+                    disabled={isLoadingRecipients}
+                  >
+                    <SelectTrigger className="w-[80px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="30">30</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {state.selectedRecipientIds.length} dari {totalRecipients} dipilih
+                </div>
+              </div>
+            </div>
+
+            {/* Conditional Rendering: City Mode vs All Mode */}
           {state.viewMode === 'city' ? (
             <CityGroupedTables
               cityGroups={cityGroups}
@@ -190,7 +191,8 @@ export const Step1ViewRecipients = ({
             />
           ) : (
             <div className="border rounded-lg overflow-hidden">
-              <table className="w-full">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-max">
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     <th className="px-4 py-3 text-left">
@@ -288,12 +290,13 @@ export const Step1ViewRecipients = ({
                     })
                   )}
                 </tbody>
-              </table>
+                </table>
+              </div>
             </div>
           )}
 
-          {/* Pagination Controls */}
-          {!isLoadingRecipients && totalRecipients > 0 && (
+            {/* Pagination Controls */}
+            {!isLoadingRecipients && totalRecipients > 0 && (
             <div className="flex items-center justify-between mt-4 px-2">
               <div className="text-sm text-gray-600">
                 Menampilkan {startIndex + 1} - {endIndex} dari {totalRecipients} penerima
@@ -365,9 +368,10 @@ export const Step1ViewRecipients = ({
                 >
                   Terakhir
                 </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Assignment Mode Selection */}
