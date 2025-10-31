@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MapPin, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,10 +33,24 @@ export const Step1ViewRecipients = ({
   totalRecipients,
   isLoadingRecipients 
 }: Step1ViewRecipientsProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [inputValue, setInputValue] = useState(''); // For immediate display
+  const [searchQuery, setSearchQuery] = useState(''); // For actual API search
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { hoveredId, handleMarkerHover, handleRowHover, handleMarkerClick } = useMapSync();
+
+  // Debounced search: trigger API call 500ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputValue !== searchQuery) {
+        setSearchQuery(inputValue);
+        setCurrentPage(1);
+        fetchData(1, itemsPerPage, inputValue);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [inputValue, itemsPerPage]); // Re-run when inputValue changes
 
   // Fetch data when pagination changes
   const fetchData = async (page: number, perPage: number, search: string = '') => {
@@ -54,11 +68,9 @@ export const Step1ViewRecipients = ({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalRecipients);
 
-  // Reset to page 1 and fetch when search query changes
-  const handleSearchChange = async (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-    await fetchData(1, itemsPerPage, value);
+  // Handle input change - just update the display value
+  const handleSearchChange = (value: string) => {
+    setInputValue(value);
   };
 
   // Reset to page 1 and fetch when items per page changes
@@ -149,7 +161,7 @@ export const Step1ViewRecipients = ({
               <div className="flex-1 max-w-sm">
                 <Input
                   placeholder="Cari penerima..."
-                  value={searchQuery}
+                  value={inputValue}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   disabled={isLoadingRecipients}
                 />

@@ -609,7 +609,7 @@
 
 ---
 
-### Phase 2B: Assignment Management (Priority 2) - ⏳ Not Started
+### Phase 2B: Assignment Management (Priority 2) - ✅ **COMPLETED**
 
 **Focus**: CRUD operations for assignments after creation flow is complete
 
@@ -908,9 +908,84 @@
 
 ---
 
-### Phase 3: Polish & Testing (Week 5-6) - ⏳ Not Started
+### Phase 3: Route Optimization Migration to Routes API (NEW) - ⏳ Not Started
 
-#### Sprint 3.1: UI/UX Refinements (3 days) - ⏳ Pending
+**Focus**: Migrate from Distance Matrix API to Routes API with 2-layer caching
+
+**Rationale**:
+- Distance Matrix API is deprecated (legacy status)
+- Routes API has 6.25x higher element limit (625 vs 100 elements)
+- Enable support for traffic-aware optimization (Essentials vs Pro modes)
+- Implement 2-layer caching for cost savings (60-90% reduction)
+- Stay within free tier with smart caching strategy
+
+**Reference Document**: `memory-bank/routes-api-migration-plan.md`
+
+**Deliverable**: Routes API integration + Redis caching + traffic toggle UI
+
+#### Sprint 3.1: Routes API Service & Caching (3 days) - ⏳ Pending
+**Target**: Backend migration to Routes API with 2-layer cache
+
+- [ ] Install Redis (Docker or local)
+- [ ] Create CacheService utility class
+- [ ] Create RoutesAPIService class
+  - [ ] Batching logic for large requests
+  - [ ] Support Essentials (no traffic) and Pro (with traffic) modes
+  - [ ] 2-layer cache integration
+  - [ ] Dynamic TTL based on time of day
+  - [ ] Error handling and retries
+- [ ] Write unit tests (cache_service, routes_api_service)
+- [ ] Update requirements.txt (redis==5.0.0)
+
+**Deliverable**: Routes API service with Redis caching (✅ **Pending**)
+
+#### Sprint 3.2: Optimization Service Integration (2 days) - ⏳ Pending
+**Target**: Update CVRP/TSP to use Routes API
+
+- [ ] Update optimization_service.py
+  - [ ] Replace Distance Matrix calls with Routes API
+  - [ ] Add use_traffic parameter
+  - [ ] Update distance matrix retrieval logic
+- [ ] Update distance_service.py (or deprecate)
+- [ ] Update optimization API endpoints
+  - [ ] Add use_traffic field to OptimizationRequest schema
+  - [ ] Pass use_traffic to optimization service
+- [ ] Update integration tests
+
+**Deliverable**: CVRP/TSP using Routes API (✅ **Pending**)
+
+#### Sprint 3.3: Frontend Traffic Toggle & Testing (2 days) - ⏳ Pending
+**Target**: UI for traffic mode selection + comprehensive testing
+
+- [ ] Frontend: Add traffic toggle to Step1ViewRecipients
+  - [ ] Checkbox in Rekomendasi mode
+  - [ ] Cost warning alert
+  - [ ] State management integration
+- [ ] Update optimizationService.ts
+- [ ] Integration testing
+  - [ ] Test Essentials mode (no traffic)
+  - [ ] Test Pro mode (with traffic)
+  - [ ] Test batching with 50+ recipients
+  - [ ] Measure cache hit rate
+- [ ] Manual testing & bug fixes
+- [ ] Update OPTIMIZATION_README.md
+
+**Deliverable**: Complete Routes API migration (✅ **Pending**)
+
+**Sprint 3 Total**: 7 days
+
+**Sprint 3 Success Criteria**:
+- ✅ No MAX_ELEMENTS_EXCEEDED errors with 100+ recipients
+- ✅ Both Essentials and Pro modes working
+- ✅ Cache hit rate >70%
+- ✅ Stay within free tier (typical usage)
+- ✅ All tests passing
+
+---
+
+### Phase 4: Polish & Testing (Week 5-6) - ⏳ Not Started
+
+#### Sprint 4.1: UI/UX Refinements (3 days) - ⏳ Pending
 **Target**: Production-quality UI/UX
 
 - [ ] Loading states (skeletons, spinners)
@@ -922,7 +997,7 @@
 - [ ] Accessibility improvements
 - [ ] Performance optimization (lazy loading, memoization)
 
-#### Sprint 3.2: Testing & Bug Fixes (2 days) - ⏳ Pending
+#### Sprint 4.2: Testing & Bug Fixes (2 days) - ⏳ Pending
 **Target**: Production-ready application
 
 - [ ] Integration testing
@@ -937,11 +1012,11 @@
 
 ---
 
-### Phase 4: Containerization, Deployment & Handover (Week 7) - ⏳ Not Started
+### Phase 5: Containerization, Deployment & Handover (Week 7) - ⏳ Not Started
 
 ---
 
-#### Sprint 4.1: Containerization & Deployment (3 days) - ⏳ Pending
+#### Sprint 5.1: Containerization & Deployment (3 days) - ⏳ Pending
 **Target**: Containerized application + live production system
 
 **Containerization:**
@@ -990,7 +1065,7 @@
 
 **Deliverable**: Containerized application + live production system
 
-#### Sprint 4.2: Documentation & Training (2 days) - ⏳ Pending
+#### Sprint 5.2: Documentation & Training (2 days) - ⏳ Pending
 **Target**: Complete documentation + training
 
 - [ ] User manual (Bahasa Indonesia)
