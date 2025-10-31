@@ -6,6 +6,8 @@ import { MainLayout } from '@/components/layout/MainLayout'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import { RecipientList } from '@/pages/RecipientList'
+import { RecipientDetail } from '@/pages/RecipientDetail'
+import RecipientForm from '@/pages/RecipientForm'
 import CourierList from '@/pages/CourierList'
 import CourierForm from '@/pages/CourierForm'
 import { AssignmentList } from '@/pages/AssignmentList'
@@ -36,6 +38,36 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <RecipientList />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recipients/create"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <RecipientForm />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recipients/:id"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <RecipientDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recipients/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <RecipientForm />
                   </MainLayout>
                 </ProtectedRoute>
               }

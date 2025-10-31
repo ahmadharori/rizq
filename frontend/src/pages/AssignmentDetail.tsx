@@ -20,11 +20,22 @@ import {
 import { StatusUpdateButton } from '@/components/assignments/StatusUpdateButton';
 import { BulkStatusUpdate } from '@/components/assignments/BulkStatusUpdate';
 import { StatusHistoryModal } from '@/components/assignments/StatusHistoryModal';
+import { WhatsAppButton } from '@/components/assignments/WhatsAppButton';
 import MapWithRoutes from '@/features/assignments/wizard/MapWithRoutes';
 import { toast } from 'sonner';
-import { ArrowLeft, User, Package, Clock, MapPin, History, CheckSquare } from 'lucide-react';
+import { ArrowLeft, User, Package, Clock, MapPin, History, CheckSquare, Trash2 } from 'lucide-react';
 import type { RecipientStatus } from '@/types/recipient';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export function AssignmentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +50,12 @@ export function AssignmentDetail() {
   const [bulkUpdateOpen, setBulkUpdateOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedRecipientForHistory, setSelectedRecipientForHistory] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Depot location from environment variable
+  const DEPOT_LAT = parseFloat(import.meta.env.VITE_DEPOT_LAT || '-6.2088');
+  const DEPOT_LNG = parseFloat(import.meta.env.VITE_DEPOT_LNG || '106.8456');
 
   useEffect(() => {
     const loadAssignment = async () => {
@@ -143,6 +160,35 @@ export function AssignmentDetail() {
     setHistoryModalOpen(true);
   };
 
+  // Handle delete assignment
+  const handleDeleteAssignment = async () => {
+    if (!id) return;
+
+    setDeleting(true);
+    try {
+      const result = await assignmentService.deleteAssignment(id);
+      
+      toast.success(
+        `Assignment berhasil dihapus. ${result.reverted_recipients_count} penerima dikembalikan ke status Unassigned.`
+      );
+      
+      // Redirect to assignment list
+      navigate('/assignments');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Gagal menghapus assignment';
+      toast.error(errorMessage);
+      console.error('Error deleting assignment:', err);
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  // Check if assignment can be deleted
+  const canDelete = assignment?.recipients.every(
+    r => r.status !== 'Done' && r.status !== 'Delivery'
+  ) ?? false;
+
   if (loading) {
     return (
       <div className="p-6">
@@ -177,6 +223,23 @@ export function AssignmentDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-3xl font-bold">{assignment.name}</h1>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <WhatsAppButton 
+            assignment={assignment}
+            depotLat={DEPOT_LAT}
+            depotLng={DEPOT_LNG}
+          />
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+            disabled={!canDelete}
+            title={!canDelete ? 'Tidak dapat menghapus assignment dengan penerima berstatus Done atau Delivery' : ''}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Hapus Assignment
+          </Button>
         </div>
       </div>
 
@@ -433,6 +496,32 @@ export function AssignmentDetail() {
           onOpenChange={setHistoryModalOpen}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Assignment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Assignment <strong>{assignment.name}</strong> akan dihapus dan semua penerima akan dikembalikan ke status "Unassigned".
+              <br /><br />
+              Total <strong>{assignment.recipients.length} penerima</strong> akan terpengaruh.
+              <br /><br />
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAssignment}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleting ? 'Menghapus...' : 'Hapus Assignment'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +34,31 @@ const ALLOWED_TRANSITIONS: Record<RecipientStatus, RecipientStatus[]> = {
   'Return': ['Assigned']
 };
 
-// Status labels in Indonesian
+// Status configuration with colors (matching StatusBadge.tsx)
+const STATUS_CONFIG: Record<RecipientStatus, { className: string; label: string }> = {
+  'Unassigned': {
+    className: 'bg-gray-500 text-white hover:bg-gray-600',
+    label: 'Unassigned'
+  },
+  'Assigned': {
+    className: 'bg-amber-500 text-white hover:bg-amber-600',
+    label: 'Assigned'
+  },
+  'Delivery': {
+    className: 'bg-blue-500 text-white hover:bg-blue-600',
+    label: 'Delivery'
+  },
+  'Done': {
+    className: 'bg-green-500 text-white hover:bg-green-600',
+    label: 'Done'
+  },
+  'Return': {
+    className: 'bg-red-500 text-white hover:bg-red-600',
+    label: 'Return'
+  }
+};
+
+// Status labels in Indonesian for confirmation dialog
 const STATUS_LABELS: Record<RecipientStatus, string> = {
   'Unassigned': 'Belum Ditugaskan',
   'Assigned': 'Ditugaskan',
@@ -98,12 +123,14 @@ export function StatusUpdateButton({
     }
   };
 
+  const config = STATUS_CONFIG[currentStatus];
+
   // If no allowed transitions, show disabled state
   if (allowedStatuses.length === 0) {
     return (
-      <Button variant="outline" size="sm" disabled>
-        {STATUS_LABELS[currentStatus]}
-      </Button>
+      <Badge className={`${config.className} opacity-60 cursor-not-allowed`}>
+        {config.label}
+      </Badge>
     );
   }
 
@@ -111,18 +138,22 @@ export function StatusUpdateButton({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            {STATUS_LABELS[currentStatus]}
-            <ChevronDown className="h-4 w-4" />
-          </Button>
+          <Badge 
+            className={`${config.className} cursor-pointer transition-all flex items-center gap-1`}
+          >
+            {config.label}
+            <ChevronDown className="h-3 w-3" />
+          </Badge>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="bg-white">
           {allowedStatuses.map((status) => (
             <DropdownMenuItem
               key={status}
               onClick={() => handleStatusSelect(status)}
             >
-              Ubah ke: {STATUS_LABELS[status]}
+              <Badge className={STATUS_CONFIG[status].className}>
+                {STATUS_CONFIG[status].label}
+              </Badge>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

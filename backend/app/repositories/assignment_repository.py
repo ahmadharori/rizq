@@ -581,3 +581,107 @@ class AssignmentRepository:
         ).order_by(desc(StatusHistory.changed_at)).all()
         
         return history
+    
+    def delete_assignment(
+        self,
+        assignment_id: UUID,
+        deleted_by: UUID
+    ) -> dict:
+        """
+        Soft delete assignment and revert all recipients to Unassigned.
+        
+        Validations:
+        - Cannot delete if any recipient has status 'Done'
+        - Cannot delete if any recipient has status 'Delivery'
+        
+        Operations:
+        1. Validate no recipients have status Done or Delivery
+        2. Soft delete assignment (is_deleted = True)
+        3. Update all recipients status to Unassigned
+        4. Create status history entries for audit trail
+        
+        Args:
+            assignment_id: UUID of assignment to delete
+            deleted_by: UUID of user deleting the assignment
+            
+        Returns:
+            Dictionary with success message and reverted recipient count
+            
+        Raises:
+            ValueError: If validation fails
+        """
+        try:
+            # Get assignment with all recipients
+            assignment = self.get_by_id_with_full_details(assignment_id)
+            if not assignment:
+                raise ValueError(f"Assignment {assignment_id} not found")
+            
+            # Check if any recipients have status 'Done' or 'Delivery'
+            invalid_recipients = []
+            recipient_ids = []
+            
+            for ar in assignment.assignment_recipients:
+                recipient = ar.recipient
+                recipient_ids.append(recipient.id)
+                
+                current_status = recipient.status if isinstance(recipient.status, str) else recipient.status.value
+                
+                if current_status in [RecipientStatus.DONE.value, RecipientStatus.DELIVERY.value]:
+                    invalid_recipients.append({
+                        "name": recipient.name,
+                        "status": current_status
+                    })
+            
+            if invalid_recipients:
+                # Build error message
+                recipient_list = ", ".join([f"{r['name']} ({r['status']})" for r in invalid_recipients])
+                raise ValueError(
+                    f"Cannot delete assignment: The following recipients have status 'Done' or 'Delivery': {recipient_list}"
+                )
+            
+            # Soft delete assignment
+            assignment.is_deleted = True
+            assignment.updated_at = datetime.utcnow()
+            
+            # Update all recipients to Unassigned
+            if recipient_ids:
+                # Create status history entries BEFORE updating status
+                for ar in assignment.assignment_recipients:
+                    recipient = ar.recipient
+                    old_status = recipient.status if isinstance(recipient.status, str) else recipient.status.value
+                    
+                    history = StatusHistory(
+                        recipient_id=recipient.id,
+                        old_status=old_status,
+                        new_status=RecipientStatus.UNASSIGNED.value,
+                        changed_by=deleted_by,
+                        changed_at=datetime.utcnow()
+                    )
+                    self.db.add(history)
+                
+                # Now update all recipients to Unassigned
+                self.db.query(Recipient).filter(
+                    Recipient.id.in_(recipient_ids)
+                ).update(
+                    {
+                        'status': RecipientStatus.UNASSIGNED.value,
+                        'updated_at': datetime.utcnow()
+                    },
+                    synchronize_session=False
+                )
+            
+            # Commit transaction
+            self.db.commit()
+            
+            return {
+                "success": True,
+                "message": "Assignment deleted successfully",
+                "reverted_recipients_count": len(recipient_ids)
+            }
+            
+        except (ValueError, IntegrityError) as e:
+            self.db.rollback()
+            raise e
+        except Exception as e:
+            self.db.rollback()
+            raise RuntimeError(f"Failed to delete assignment: {str(e)}")

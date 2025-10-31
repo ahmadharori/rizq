@@ -178,6 +178,16 @@ export const getRecipientStatusHistory = async (
   return response.data;
 };
 
+/**
+ * Delete assignment
+ */
+export const deleteAssignment = async (
+  assignmentId: string
+): Promise<{ success: boolean; message: string; reverted_recipients_count: number }> => {
+  const response = await api.delete(`/assignments/${assignmentId}`);
+  return response.data;
+};
+
 export const assignmentService = {
   createAssignment,
   createBulkAssignments,
@@ -187,5 +197,6 @@ export const assignmentService = {
   updateAssignment,
   updateRecipientStatus,
   bulkUpdateRecipientStatus,
-  getRecipientStatusHistory
+  getRecipientStatusHistory,
+  deleteAssignment
 };
