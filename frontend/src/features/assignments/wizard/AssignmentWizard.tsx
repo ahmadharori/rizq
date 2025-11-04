@@ -40,7 +40,7 @@ export const AssignmentWizard = () => {
           recipientService.getAll({
             page: 1,
             per_page: 10,
-            status: RecipientStatus.UNASSIGNED
+            status: [RecipientStatus.UNASSIGNED, RecipientStatus.RETURN]
           }),
           getCouriers({
             per_page: 10 // Get all couriers
@@ -98,7 +98,7 @@ export const AssignmentWizard = () => {
       const response = await recipientService.getAll({
         page,
         per_page: perPage,
-        status: RecipientStatus.UNASSIGNED,
+        status: [RecipientStatus.UNASSIGNED, RecipientStatus.RETURN],
         search: search || undefined
       });
 
@@ -251,7 +251,7 @@ export const AssignmentWizard = () => {
 
       // Reset wizard and navigate
       actions.resetWizard();
-      navigate('/recipients');
+      navigate('/assignments');
 
     } catch (error: any) {
       console.error('Save assignment failed:', error);

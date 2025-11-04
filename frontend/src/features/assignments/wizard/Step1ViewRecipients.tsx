@@ -13,6 +13,7 @@ import {
 import { MapView } from '@/components/maps/MapView';
 import { MapLegend } from '@/components/maps/MapLegend';
 import { CityGroupedTables } from './CityGroupedTables';
+import { StatusBadge } from '@/components/common/StatusBadge';
 import { useMapSync } from '@/hooks/useMapSync';
 import type { WizardState } from '@/types/wizard';
 import { cn } from '@/utils/cn';
@@ -57,11 +58,8 @@ export const Step1ViewRecipients = ({
     await onFetchRecipients(page, perPage, search);
   };
 
-  // Filter recipients (only Unassigned for now) - but now data comes from API
-  const unassignedRecipients = state.recipients.filter(r => r.status === 'Unassigned');
-  
-  // No need for local filtering anymore - API handles it
-  const displayRecipients = unassignedRecipients;
+  // No need for local filtering - API already handles filtering by status
+  const displayRecipients = state.recipients;
 
   // Pagination calculations from API response
   const totalPages = Math.ceil(totalRecipients / itemsPerPage);
@@ -222,6 +220,9 @@ export const Step1ViewRecipients = ({
                       Nama
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
                       Nomor Telpon
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
@@ -238,7 +239,7 @@ export const Step1ViewRecipients = ({
                 <tbody className="divide-y">
                   {isLoadingRecipients ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                           <span>Memuat data...</span>
@@ -247,8 +248,8 @@ export const Step1ViewRecipients = ({
                     </tr>
                   ) : displayRecipients.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                        Tidak ada penerima dengan status "Unassigned"
+                      <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                        Tidak ada penerima yang tersedia untuk assignment
                       </td>
                     </tr>
                   ) : (
@@ -284,6 +285,9 @@ export const Step1ViewRecipients = ({
                           </td>
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">
                             {recipient.name}
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge status={recipient.status} />
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {recipient.phone}

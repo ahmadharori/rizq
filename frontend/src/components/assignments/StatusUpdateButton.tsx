@@ -20,10 +20,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, FileText, Edit, Truck, CheckCircle, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { assignmentService } from '@/services/assignmentService';
 import type { RecipientStatus } from '@/types/recipient';
+import type { LucideIcon } from 'lucide-react';
 
 // Status transition rules (must match backend)
 const ALLOWED_TRANSITIONS: Record<RecipientStatus, RecipientStatus[]> = {
@@ -34,27 +35,32 @@ const ALLOWED_TRANSITIONS: Record<RecipientStatus, RecipientStatus[]> = {
   'Return': ['Assigned']
 };
 
-// Status configuration with colors (matching StatusBadge.tsx)
-const STATUS_CONFIG: Record<RecipientStatus, { className: string; label: string }> = {
+// Status configuration with WCAG AA compliant colors + icons (matching StatusBadge.tsx)
+const STATUS_CONFIG: Record<RecipientStatus, { className: string; label: string; icon: LucideIcon }> = {
   'Unassigned': {
-    className: 'bg-gray-500 text-white hover:bg-gray-600',
-    label: 'Unassigned'
+    className: 'bg-gray-600 text-white hover:bg-gray-700',
+    label: 'Unassigned',
+    icon: FileText
   },
   'Assigned': {
-    className: 'bg-amber-500 text-white hover:bg-amber-600',
-    label: 'Assigned'
+    className: 'bg-amber-700 text-white hover:bg-amber-800',
+    label: 'Assigned',
+    icon: Edit
   },
   'Delivery': {
-    className: 'bg-blue-500 text-white hover:bg-blue-600',
-    label: 'Delivery'
+    className: 'bg-blue-600 text-white hover:bg-blue-700',
+    label: 'Delivery',
+    icon: Truck
   },
   'Done': {
-    className: 'bg-green-500 text-white hover:bg-green-600',
-    label: 'Done'
+    className: 'bg-green-700 text-white hover:bg-green-800',
+    label: 'Done',
+    icon: CheckCircle
   },
   'Return': {
-    className: 'bg-red-500 text-white hover:bg-red-600',
-    label: 'Return'
+    className: 'bg-red-600 text-white hover:bg-red-700',
+    label: 'Return',
+    icon: RotateCcw
   }
 };
 
@@ -124,11 +130,13 @@ export function StatusUpdateButton({
   };
 
   const config = STATUS_CONFIG[currentStatus];
+  const StatusIcon = config.icon;
 
   // If no allowed transitions, show disabled state
   if (allowedStatuses.length === 0) {
     return (
-      <Badge className={`${config.className} opacity-60 cursor-not-allowed`}>
+      <Badge className={`${config.className} opacity-60 cursor-not-allowed flex items-center gap-1.5`}>
+        <StatusIcon className="h-3 w-3" />
         {config.label}
       </Badge>
     );
@@ -139,23 +147,28 @@ export function StatusUpdateButton({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Badge 
-            className={`${config.className} cursor-pointer transition-all flex items-center gap-1`}
+            className={`${config.className} cursor-pointer transition-all flex items-center gap-1.5`}
           >
+            <StatusIcon className="h-3 w-3" />
             {config.label}
             <ChevronDown className="h-3 w-3" />
           </Badge>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="bg-white">
-          {allowedStatuses.map((status) => (
-            <DropdownMenuItem
-              key={status}
-              onClick={() => handleStatusSelect(status)}
-            >
-              <Badge className={STATUS_CONFIG[status].className}>
-                {STATUS_CONFIG[status].label}
-              </Badge>
-            </DropdownMenuItem>
-          ))}
+          {allowedStatuses.map((status) => {
+            const StatusMenuIcon = STATUS_CONFIG[status].icon;
+            return (
+              <DropdownMenuItem
+                key={status}
+                onClick={() => handleStatusSelect(status)}
+              >
+                <Badge className={`${STATUS_CONFIG[status].className} flex items-center gap-1.5`}>
+                  <StatusMenuIcon className="h-3 w-3" />
+                  {STATUS_CONFIG[status].label}
+                </Badge>
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
 

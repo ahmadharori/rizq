@@ -28,6 +28,7 @@ from app.schemas.assignment import (
     StatusHistoryResponse,
     StatusHistoryItem
 )
+from app.schemas.recipient import RecipientStatusHistoryResponse
 
 router = APIRouter(prefix="/api/v1/assignments", tags=["assignments"])
 
@@ -407,7 +408,7 @@ def bulk_update_recipient_status(
         )
 
 
-@router.get("/{assignment_id}/recipients/{recipient_id}/history", response_model=StatusHistoryResponse)
+@router.get("/{assignment_id}/recipients/{recipient_id}/history", response_model=RecipientStatusHistoryResponse)
 def get_recipient_status_history(
     assignment_id: UUID,
     recipient_id: UUID,
@@ -426,6 +427,16 @@ def get_recipient_status_history(
             assignment_id=assignment_id,
             recipient_id=recipient_id
         )
+            # Serialize history
+        history_items = []
+        for item in history:
+            history_items.append({
+                "id": item.id,
+                "old_status": item.old_status,
+                "new_status": item.new_status,
+                "changed_at": item.changed_at,
+                "changed_by_username": item.changed_by_user.username if item.changed_by_user else None
+            })
         
         # Get recipient name
         from app.models.recipient import Recipient
@@ -440,7 +451,7 @@ def get_recipient_status_history(
         return {
             "recipient_id": recipient_id,
             "recipient_name": recipient.name,
-            "history": history
+            "history": history_items
         }
         
     except ValueError as e:

@@ -1,5 +1,6 @@
 import type { Recipient } from '@/types/recipient';
 import type { CityGroup } from '@/utils/wizardConstants';
+import { StatusBadge } from '@/components/common/StatusBadge';
 import { cn } from '@/utils/cn';
 
 interface CityGroupedTablesProps {
@@ -36,7 +37,7 @@ export const CityGroupedTables = ({
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="px-4 py-8 text-center text-gray-500">
-          Tidak ada penerima dengan status "Unassigned"
+          Tidak ada penerima yang tersedia untuk assignment
         </div>
       </div>
     );
@@ -104,6 +105,9 @@ export const CityGroupedTables = ({
                     Nama
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
                     Nomor Telpon
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
@@ -146,6 +150,9 @@ export const CityGroupedTables = ({
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         {recipient.name}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={recipient.status} />
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {recipient.phone}

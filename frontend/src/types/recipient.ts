@@ -73,9 +73,9 @@ export interface RecipientListResponse {
 
 export interface RecipientFilters {
   search?: string;
-  status?: RecipientStatus;
-  province_id?: number;
-  city_id?: number;
+  status?: RecipientStatus[];
+  province_id?: number[];
+  city_id?: number[];
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
 }

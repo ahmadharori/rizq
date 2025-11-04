@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -20,9 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { FileText, Edit, Truck, CheckCircle, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { assignmentService } from '@/services/assignmentService';
 import type { RecipientStatus } from '@/types/recipient';
+import type { LucideIcon } from 'lucide-react';
+import { StatusBadge } from '@/components/common/StatusBadge';
 
 // Status transition rules (must match backend)
 const ALLOWED_TRANSITIONS: Record<RecipientStatus, RecipientStatus[]> = {
@@ -31,6 +35,35 @@ const ALLOWED_TRANSITIONS: Record<RecipientStatus, RecipientStatus[]> = {
   'Delivery': ['Done', 'Return'],
   'Done': [],
   'Return': ['Assigned']
+};
+
+// Status configuration with WCAG AA compliant colors + icons (matching StatusBadge.tsx)
+const STATUS_CONFIG: Record<RecipientStatus, { className: string; label: string; icon: LucideIcon }> = {
+  'Unassigned': {
+    className: 'bg-gray-600 text-white',
+    label: 'Unassigned',
+    icon: FileText
+  },
+  'Assigned': {
+    className: 'bg-amber-700 text-white',
+    label: 'Assigned',
+    icon: Edit
+  },
+  'Delivery': {
+    className: 'bg-blue-600 text-white',
+    label: 'Delivery',
+    icon: Truck
+  },
+  'Done': {
+    className: 'bg-green-700 text-white',
+    label: 'Done',
+    icon: CheckCircle
+  },
+  'Return': {
+    className: 'bg-red-600 text-white',
+    label: 'Return',
+    icon: RotateCcw
+  }
 };
 
 // Status labels in Indonesian
@@ -168,11 +201,17 @@ export function BulkStatusUpdate({
                     Tidak ada status yang dapat diterapkan ke semua penerima yang dipilih
                   </div>
                 ) : (
-                  commonAllowedStatuses.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {STATUS_LABELS[status]}
-                    </SelectItem>
-                  ))
+                  commonAllowedStatuses.map(status => {
+                    const StatusIcon = STATUS_CONFIG[status].icon;
+                    return (
+                      <SelectItem key={status} value={status}>
+                        <Badge className={`${STATUS_CONFIG[status].className} flex items-center gap-1.5`}>
+                          <StatusIcon className="h-3 w-3" />
+                          {STATUS_CONFIG[status].label}
+                        </Badge>
+                      </SelectItem>
+                    );
+                  })
                 )}
               </SelectContent>
             </Select>
@@ -207,7 +246,7 @@ export function BulkStatusUpdate({
               {selectedRecipients.map(r => (
                 <div key={r.id} className="text-sm flex justify-between items-center">
                   <span>{r.name}</span>
-                  <span className="text-xs text-gray-500">{STATUS_LABELS[r.status]}</span>
+                  <StatusBadge status={r.status} />
                 </div>
               ))}
             </div>

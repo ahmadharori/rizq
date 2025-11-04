@@ -79,9 +79,9 @@ async def get_recipients(
     page: int = Query(1, ge=1),
     per_page: int = Query(30, ge=10, le=100),
     search: Optional[str] = Query(None),
-    status: Optional[RecipientStatus] = Query(None),
-    province_id: Optional[int] = Query(None),
-    city_id: Optional[int] = Query(None),
+    status: Optional[list[RecipientStatus]] = Query(None),
+    province_id: Optional[list[int]] = Query(None),
+    city_id: Optional[list[int]] = Query(None),
     sort_by: str = Query("created_at"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$")
 ):
@@ -92,9 +92,9 @@ async def get_recipients(
     - page: Page number (default: 1)
     - per_page: Items per page (10-100, default: 30)
     - search: Search in name, phone, address
-    - status: Filter by status
-    - province_id: Filter by province
-    - city_id: Filter by city
+    - status: Filter by status (can be multiple)
+    - province_id: Filter by province (can be multiple)
+    - city_id: Filter by city (can be multiple)
     - sort_by: Column to sort by (default: created_at)
     - sort_order: asc or desc (default: desc)
     """

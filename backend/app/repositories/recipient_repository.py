@@ -41,9 +41,9 @@ class RecipientRepository:
         page: int = 1,
         per_page: int = 30,
         search: Optional[str] = None,
-        status: Optional[RecipientStatus] = None,
-        province_id: Optional[int] = None,
-        city_id: Optional[int] = None,
+        status: Optional[list[RecipientStatus]] = None,
+        province_id: Optional[list[int]] = None,
+        city_id: Optional[list[int]] = None,
         sort_by: str = "created_at",
         sort_order: str = "desc"
     ) -> tuple[list[Recipient], int]:
@@ -54,9 +54,9 @@ class RecipientRepository:
             page: Page number (1-indexed)
             per_page: Items per page (10-100)
             search: Search query (applies to name, phone, address)
-            status: Filter by status
-            province_id: Filter by province
-            city_id: Filter by city
+            status: Filter by status (can be multiple)
+            province_id: Filter by province (can be multiple)
+            city_id: Filter by city (can be multiple)
             sort_by: Column to sort by
             sort_order: 'asc' or 'desc'
             
@@ -80,13 +80,13 @@ class RecipientRepository:
             )
         
         if status:
-            query = query.filter(Recipient.status == status.value)
+            query = query.filter(Recipient.status.in_([s.value for s in status]))
         
         if province_id:
-            query = query.filter(Recipient.province_id == province_id)
+            query = query.filter(Recipient.province_id.in_(province_id))
         
         if city_id:
-            query = query.filter(Recipient.city_id == city_id)
+            query = query.filter(Recipient.city_id.in_(city_id))
         
         # Get total count before pagination
         total_count = query.count()

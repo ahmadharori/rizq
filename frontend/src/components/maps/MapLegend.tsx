@@ -1,7 +1,8 @@
 import { Circle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { StatusBadge } from '@/components/common/StatusBadge';
 import { STATUS_COLORS, groupRecipientsByCity } from '@/utils/wizardConstants';
-import type { Recipient } from '@/types/recipient';
+import type { Recipient, RecipientStatus } from '@/types/recipient';
 
 interface MapLegendProps {
   viewMode?: 'all' | 'city';
@@ -31,13 +32,7 @@ export const MapLegend = ({ viewMode = 'all', recipients = [] }: MapLegendProps)
           // Render status legends
           statusLegends.map((legend) => (
             <div key={legend.key} className="flex items-center gap-2">
-              <Circle
-                className="w-4 h-4 flex-shrink-0"
-                fill={legend.color}
-                stroke={legend.color}
-                strokeWidth={0}
-              />
-              <span className="text-sm text-gray-600">{legend.label}</span>
+              <StatusBadge status={legend.key as RecipientStatus} />
             </div>
           ))
         ) : (

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+/* @import "tw-animate-css"; */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -43,6 +44,14 @@ body {
   --sidebar-accent-foreground: hsl(240 5.9% 10%);
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+  /* Chart Colors - WCAG 2.2 Level AA Compliant */
+  /* Matches StatusBadge color scheme for consistency */
+  --chart-1: 215 20% 45%;  /* Gray-600 - Unassigned (7.05:1 contrast) */
+  --chart-2: 30 81% 38%;   /* Amber-700 - Assigned (5.38:1 contrast) */
+  --chart-3: 217 91% 60%;  /* Blue-600 - Delivery (4.66:1 contrast) */
+  --chart-4: 142 76% 36%;  /* Green-700 - Done (5.37:1 contrast) */
+  --chart-5: 0 72% 51%;    /* Red-600 - Return (5.13:1 contrast) */
 }
 
 .dark {

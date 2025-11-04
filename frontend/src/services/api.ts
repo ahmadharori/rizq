@@ -8,6 +8,9 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  paramsSerializer: {
+    indexes: null, // Remove brackets from array params: status[]=X becomes status=X
+  },
 })
 
 // Request interceptor to add JWT token

@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ReactSelect, { components, type MultiValue } from 'react-select';
 import {
   Table,
   TableBody,
@@ -35,6 +36,33 @@ import { toast } from 'sonner';
 import { ChevronUp, ChevronDown, Users, Search } from 'lucide-react';
 import { regionService } from '@/services/regionService';
 import type { Province, City } from '@/types/region';
+
+// Status select options
+interface StatusOption {
+  value: RecipientStatus;
+  label: string;
+}
+
+const statusOptions: StatusOption[] = [
+  { value: RecipientStatus.UNASSIGNED, label: 'Unassigned' },
+  { value: RecipientStatus.ASSIGNED, label: 'Assigned' },
+  { value: RecipientStatus.DELIVERY, label: 'Delivery' },
+  { value: RecipientStatus.DONE, label: 'Done' },
+  { value: RecipientStatus.RETURN, label: 'Return' },
+];
+
+// Custom components for status badges in react-select
+const StatusOptionComponent = (props: any) => (
+  <components.Option {...props}>
+    <StatusBadge status={props.data.value} showIcon={true} />
+  </components.Option>
+);
+
+const StatusMultiValueLabel = (props: any) => (
+  <components.MultiValueLabel {...props}>
+    <StatusBadge status={props.data.value} showIcon={false} />
+  </components.MultiValueLabel>
+);
 
 export function RecipientList() {
   const navigate = useNavigate();
@@ -94,17 +122,28 @@ export function RecipientList() {
     loadProvinces();
   }, []);
 
-  // Load cities when province is selected
+  // Load cities when provinces are selected (cascading multi-select)
   useEffect(() => {
     const loadCities = async () => {
-      if (!filters.province_id) {
+      if (!filters.province_id || filters.province_id.length === 0) {
         setFilteredCities([]);
         return;
       }
 
       try {
-        const citiesData = await regionService.getCities(filters.province_id.toString());
-        setFilteredCities(citiesData);
+        // Fetch cities for all selected provinces
+        const citiesPromises = filters.province_id.map(pid => 
+          regionService.getCities(pid.toString())
+        );
+        const citiesArrays = await Promise.all(citiesPromises);
+        
+        // Flatten and deduplicate cities
+        const allCities = citiesArrays.flat();
+        const uniqueCities = Array.from(
+          new Map(allCities.map(c => [c.id, c])).values()
+        );
+        
+        setFilteredCities(uniqueCities);
       } catch (err) {
         console.error('Error fetching cities:', err);
         toast.error('Gagal memuat data kab/kota');
@@ -235,76 +274,63 @@ export function RecipientList() {
           />
         </div>
         
-        <Select
-          value={filters.status || 'all'}
-          onValueChange={(value) => {
+        <ReactSelect
+          isMulti
+          options={statusOptions}
+          value={statusOptions.filter(opt => filters.status?.includes(opt.value))}
+          onChange={(selected) => {
             setFilters(prev => ({
               ...prev,
-              status: value === 'all' ? undefined : value as RecipientStatus
+              status: selected && selected.length > 0 ? selected.map(s => s.value) : undefined
             }));
             setPage(1);
           }}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Status</SelectItem>
-            <SelectItem value={RecipientStatus.UNASSIGNED}>Unassigned</SelectItem>
-            <SelectItem value={RecipientStatus.ASSIGNED}>Assigned</SelectItem>
-            <SelectItem value={RecipientStatus.DELIVERY}>Delivery</SelectItem>
-            <SelectItem value={RecipientStatus.DONE}>Done</SelectItem>
-            <SelectItem value={RecipientStatus.RETURN}>Return</SelectItem>
-          </SelectContent>
-        </Select>
+          components={{
+            Option: StatusOptionComponent,
+            MultiValueLabel: StatusMultiValueLabel
+          }}
+          placeholder="Filter Status"
+          className="w-[250px]"
+          isClearable
+        />
 
-        <Select
-          value={filters.province_id !== undefined ? filters.province_id.toString() : 'all'}
-          onValueChange={(value) => {
+        <ReactSelect
+          isMulti
+          options={provinces.map(p => ({ value: p.id, label: p.name }))}
+          value={provinces
+            .filter(p => filters.province_id?.includes(p.id))
+            .map(p => ({ value: p.id, label: p.name }))}
+          onChange={(selected) => {
             setFilters(prev => ({
               ...prev,
-              province_id: value === 'all' ? undefined : Number(value),
+              province_id: selected && selected.length > 0 ? selected.map(s => Number(s.value)) : undefined,
               city_id: undefined
             }));
             setPage(1);
           }}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Pilih Provinsi" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Provinsi</SelectItem>
-            {provinces.map(province => (
-              <SelectItem key={province.id} value={province.id.toString()}>
-                {province.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Pilih Provinsi"
+          className="w-[250px]"
+          isClearable
+        />
 
-        <Select
-          value={filters.city_id !== undefined ? filters.city_id.toString() : 'all'}
-          onValueChange={(value) => {
+        <ReactSelect
+          isMulti
+          options={filteredCities.map(c => ({ value: c.id, label: c.name }))}
+          value={filteredCities
+            .filter(c => filters.city_id?.includes(c.id))
+            .map(c => ({ value: c.id, label: c.name }))}
+          onChange={(selected) => {
             setFilters(prev => ({
               ...prev,
-              city_id: value === 'all' ? undefined : Number(value)
+              city_id: selected && selected.length > 0 ? selected.map(s => Number(s.value)) : undefined
             }));
             setPage(1);
           }}
-          disabled={!filters.province_id}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Pilih Kab/Kota" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Kab/Kota</SelectItem>
-            {filteredCities.map(city => (
-              <SelectItem key={city.id} value={city.id.toString()}>
-                {city.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          isDisabled={!filters.province_id || filters.province_id.length === 0}
+          placeholder="Pilih Kab/Kota"
+          className="w-[250px]"
+          isClearable
+        />
 
         {selectedIds.length > 0 && (
           <Button

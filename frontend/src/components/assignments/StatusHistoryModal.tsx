@@ -14,15 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { assignmentService } from '@/services/assignmentService';
-
-// Status labels in Indonesian
-const STATUS_LABELS: Record<string, string> = {
-  'Unassigned': 'Belum Ditugaskan',
-  'Assigned': 'Ditugaskan',
-  'Delivery': 'Dalam Pengiriman',
-  'Done': 'Selesai',
-  'Return': 'Dikembalikan'
-};
+import { StatusBadge } from '@/components/common/StatusBadge';
+import { RecipientStatus } from '@/types/recipient';
 
 interface StatusHistoryModalProps {
   assignmentId: string;
@@ -35,7 +28,7 @@ interface StatusHistoryItem {
   id: string;
   old_status: string | null;
   new_status: string;
-  changed_by: string;
+  changed_by_username: string;
   changed_at: string;
 }
 
@@ -125,18 +118,15 @@ export function StatusHistoryModal({
                       <div className="flex items-center gap-2 font-medium">
                         {item.old_status ? (
                           <>
-                            <span className="text-gray-600">
-                              {STATUS_LABELS[item.old_status] || item.old_status}
-                            </span>
+                            <StatusBadge status={item.old_status as RecipientStatus} />
                             <span className="text-gray-400">→</span>
-                            <span className="text-blue-600">
-                              {STATUS_LABELS[item.new_status] || item.new_status}
-                            </span>
+                            <StatusBadge status={item.new_status as RecipientStatus} />
                           </>
                         ) : (
-                          <span className="text-blue-600">
-                            Status Awal: {STATUS_LABELS[item.new_status] || item.new_status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-700">Status Awal:</span>
+                            <StatusBadge status={item.new_status as RecipientStatus} />
+                          </div>
                         )}
                       </div>
 
@@ -146,9 +136,9 @@ export function StatusHistoryModal({
                       </div>
 
                       {/* Changed By (if available) */}
-                      {item.changed_by && (
+                      {item.changed_by_username && (
                         <div className="text-xs text-gray-400">
-                          User ID: {item.changed_by}
+                          Diubah oleh: {item.changed_by_username}
                         </div>
                       )}
                     </div>

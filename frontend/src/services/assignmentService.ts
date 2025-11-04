@@ -168,7 +168,7 @@ export const getRecipientStatusHistory = async (
     id: string;
     old_status: string | null;
     new_status: string;
-    changed_by: string;
+    changed_by_username: string;
     changed_at: string;
   }>;
 }> => {

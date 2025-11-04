@@ -124,9 +124,9 @@ class BulkDeleteRequest(BaseModel):
 class RecipientFilters(BaseModel):
     """Schema for recipient filtering and sorting."""
     search: Optional[str] = None
-    status: Optional[RecipientStatus] = None
-    province_id: Optional[int] = None
-    city_id: Optional[int] = None
+    status: Optional[list[RecipientStatus]] = None
+    province_id: Optional[list[int]] = None
+    city_id: Optional[list[int]] = None
     sort_by: str = 'created_at'
     sort_order: str = 'desc'
     

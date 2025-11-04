@@ -1,6 +1,5 @@
-import { Package, Truck, ClipboardList, LogOut, Home, Plus } from 'lucide-react'
+import { Package, Truck, ClipboardList, Home, Plus } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
 import {
   Sidebar,
   SidebarContent,
@@ -12,7 +11,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarRail,
 } from '@/components/ui/sidebar'
+import { NavUser } from '@/components/layout/NavUser'
+import rizqLogo from '@/assets/rizq-logo-nobg.png'
 
 const navItems = [
   { title: 'Dashboard', url: '/', icon: Home },
@@ -28,20 +30,26 @@ const actionItems = [
 export function AppSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, logout } = useAuth()
 
   return (
-    <Sidebar collapsible="offcanvas">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="p-4">
-          <h2 className="text-xl font-bold">RizQ Dashboard</h2>
-          <p className="text-sm text-muted-foreground">Sembako Delivery</p>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
+                <img src={rizqLogo} alt="RizQ Logo" className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">RizQ</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
@@ -64,7 +72,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         
-        <SidebarGroup>
+        {/* <SidebarGroup>
           <SidebarGroupLabel>Actions</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -86,19 +94,13 @@ export function AppSidebar() {
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup> */}
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={logout}>
-              <LogOut className="h-4 w-4" />
-              <span>Logout ({user?.username})</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }
