@@ -44,7 +44,8 @@ export default function Step3PreviewAndEdit({ state, actions }: Step3Props) {
         
         const assignments = await optimizationService.runTSPForGroups(
           state.manualGroups,
-          getDepotLocation()
+          getDepotLocation(),
+          state.useTraffic
         );
 
         actions.setAssignments(assignments);
@@ -57,7 +58,8 @@ export default function Step3PreviewAndEdit({ state, actions }: Step3Props) {
           state.selectedRecipientIds,
           state.selectedCourierIds.length,
           state.capacityPerCourier || 20,
-          getDepotLocation()
+          getDepotLocation(),
+          state.useTraffic
         );
 
         const assignments = optimizationService.convertCVRPToAssignments(

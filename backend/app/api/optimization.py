@@ -91,7 +91,8 @@ async def optimize_tsp(
         result = optimizer.solve_tsp(
             recipient_ids=request.recipient_ids,
             depot_location=depot_location,
-            timeout_seconds=request.timeout_seconds
+            timeout_seconds=request.timeout_seconds,
+            use_traffic=request.use_traffic
         )
         
         logger.info(f"TSP solved successfully: {result['num_stops']} stops, {result['total_distance_meters']}m")
@@ -169,7 +170,8 @@ async def optimize_cvrp(
             num_couriers=request.num_couriers,
             capacity_per_courier=request.capacity_per_courier,
             depot_location=depot_location,
-            timeout_seconds=request.timeout_seconds
+            timeout_seconds=request.timeout_seconds,
+            use_traffic=request.use_traffic
         )
         
         logger.info(
@@ -224,9 +226,10 @@ async def calculate_distance_matrix_legs(
         all_locations = [depot_location] + recipient_locations
         
         # Get distance matrix
-        matrix_data = service.distance_service.get_distance_matrix(
+        matrix_data = service.routes_api_service.compute_route_matrix(
             origins=all_locations,
-            destinations=all_locations
+            destinations=all_locations,
+            use_traffic=False  # distance-matrix-legs endpoint always uses Essentials mode
         )
         
         # Extract sequential legs

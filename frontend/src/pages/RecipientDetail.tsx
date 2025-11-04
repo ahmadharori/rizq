@@ -8,6 +8,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { recipientService } from '@/services/recipientService';
 import type { Recipient, StatusHistoryItem } from '@/types/recipient';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { DetailSkeleton } from '@/components/common/DetailSkeleton';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -36,6 +38,7 @@ export function RecipientDetail() {
   const [recipient, setRecipient] = useState<Recipient | null>(null);
   const [history, setHistory] = useState<StatusHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -53,6 +56,7 @@ export function RecipientDetail() {
     
     try {
       setLoading(true);
+      setError(null);
       const [recipientData, historyData] = await Promise.all([
         recipientService.getById(id),
         recipientService.getHistory(id)
@@ -60,13 +64,19 @@ export function RecipientDetail() {
       
       setRecipient(recipientData);
       setHistory(historyData.history);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading recipient:', error);
-      toast.error('Gagal memuat data penerima');
-      navigate('/recipients');
+      const errorMessage = error.response?.data?.detail || 'Gagal memuat data penerima';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    loadRecipientData();
   };
 
   const handleDelete = async () => {
@@ -100,11 +110,11 @@ export function RecipientDetail() {
   };
 
   if (loading) {
-    return (
-      <div className="p-6">
-        <div className="text-center py-8">Loading...</div>
-      </div>
-    );
+    return <DetailSkeleton fields={7} showMap={true} showHistory={true} />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={handleRetry} />;
   }
 
   if (!recipient) {

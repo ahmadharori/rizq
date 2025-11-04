@@ -323,8 +323,6 @@ export const AssignmentWizard = () => {
         );
       case 3:
         return <Step3PreviewAndEdit state={state} actions={actions} />;
-      case 4:
-        return <div className="p-8 text-center">Step 4 - Coming Soon</div>;
       default:
         return null;
     }
@@ -393,7 +391,7 @@ export const AssignmentWizard = () => {
             Batal
           </Button>
 
-          {state.currentStep < 4 && (
+          {state.currentStep < 3 && (
             <Button
               onClick={handleNext}
               disabled={!canProceed()}

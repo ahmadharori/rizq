@@ -5,6 +5,7 @@ import type { PreviewAssignment } from '@/types/wizard';
 interface TSPRequest {
   recipient_ids: string[];
   depot_location?: { lat: number; lng: number };
+  use_traffic?: boolean;
   timeout_seconds?: number;
 }
 
@@ -20,6 +21,7 @@ interface CVRPRequest {
   num_couriers: number;
   capacity_per_courier: number;
   depot_location?: { lat: number; lng: number };
+  use_traffic?: boolean;
   timeout_seconds?: number;
 }
 
@@ -52,10 +54,12 @@ interface CVRPResponse {
  */
 export const runTSP = async (
   recipientIds: string[],
-  depotLocation?: { lat: number; lng: number }
+  depotLocation?: { lat: number; lng: number },
+  useTraffic: boolean = false
 ): Promise<TSPResponse> => {
   const request: TSPRequest = {
     recipient_ids: recipientIds,
+    use_traffic: useTraffic,
     timeout_seconds: 5,
   };
 
@@ -73,7 +77,8 @@ export const runTSP = async (
  */
 export const runTSPForGroups = async (
   groups: Array<{ id: string; name: string; recipientIds: string[]; courierId?: string }>,
-  depotLocation?: { lat: number; lng: number }
+  depotLocation?: { lat: number; lng: number },
+  useTraffic: boolean = false
 ): Promise<PreviewAssignment[]> => {
 
   // Run TSP for each group in parallel
@@ -83,7 +88,7 @@ export const runTSPForGroups = async (
     }
 
     try {
-      const result = await runTSP(group.recipientIds, depotLocation);
+      const result = await runTSP(group.recipientIds, depotLocation, useTraffic);
 
       return {
         id: group.id,
@@ -121,12 +126,14 @@ export const runCVRP = async (
   recipientIds: string[],
   numCouriers: number,
   capacityPerCourier: number,
-  depotLocation?: { lat: number; lng: number }
+  depotLocation?: { lat: number; lng: number },
+  useTraffic: boolean = false
 ): Promise<CVRPResponse> => {
   const request: CVRPRequest = {
     recipient_ids: recipientIds,
     num_couriers: numCouriers,
     capacity_per_courier: capacityPerCourier,
+    use_traffic: useTraffic,
     timeout_seconds: 60,
   };
 

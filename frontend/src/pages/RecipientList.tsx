@@ -9,6 +9,9 @@ import { recipientService } from '@/services/recipientService';
 import type { RecipientListItem, RecipientFilters } from '@/types/recipient';
 import { RecipientStatus } from '@/types/recipient';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { TableSkeleton } from '@/components/common/TableSkeleton';
+import { ErrorState } from '@/components/common/ErrorState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,7 +32,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Users, Search } from 'lucide-react';
 import { regionService } from '@/services/regionService';
 import type { Province, City } from '@/types/region';
 
@@ -120,6 +123,13 @@ export function RecipientList() {
 
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Retry function for error state
+  const handleRetry = () => {
+    setError(null);
+    setPage(1);
+    setLoading(true);
+  };
 
   // Fetch recipients when dependencies change
   useEffect(() => {
@@ -308,9 +318,40 @@ export function RecipientList() {
 
       {/* Data Table */}
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <TableSkeleton rows={perPage} columns={9} showCheckbox />
       ) : error ? (
-        <div className="text-center py-8 text-red-500">{error}</div>
+        <ErrorState
+          message={error}
+          onRetry={handleRetry}
+        />
+      ) : recipients.length === 0 ? (
+        filters.search || filters.status || filters.province_id || filters.city_id ? (
+          <EmptyState
+            icon={Search}
+            title="Tidak Ada Hasil"
+            description={`Tidak ada penerima yang cocok dengan pencarian "${filters.search || 'filter yang dipilih'}"`}
+            actionLabel="Reset Filter"
+            onAction={() => {
+              setSearchInput('');
+              setFilters({
+                search: '',
+                status: undefined,
+                province_id: undefined,
+                city_id: undefined,
+                sort_by: 'created_at',
+                sort_order: 'desc'
+              });
+            }}
+          />
+        ) : (
+          <EmptyState
+            icon={Users}
+            title="Belum Ada Penerima"
+            description="Mulai dengan menambahkan penerima pertama Anda"
+            actionLabel="+ Buat Penerima"
+            onAction={() => navigate('/recipients/create')}
+          />
+        )
       ) : (
         <>
           <div className="border rounded-lg">
@@ -401,14 +442,7 @@ export function RecipientList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recipients.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                      Tidak ada data penerima
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  recipients.map((recipient, index) => (
+                {recipients.map((recipient, index) => (
                     <TableRow
                       key={recipient.id}
                       className="cursor-pointer hover:bg-gray-50"
@@ -439,8 +473,7 @@ export function RecipientList() {
                       <TableCell className="max-w-xs truncate">{recipient.address}</TableCell>
                       <TableCell className="text-right">{recipient.num_packages}</TableCell>
                     </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>

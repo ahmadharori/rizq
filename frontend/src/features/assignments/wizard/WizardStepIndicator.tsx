@@ -10,14 +10,14 @@ interface WizardStepIndicatorProps {
 export const WizardStepIndicator = ({ currentStep }: WizardStepIndicatorProps) => {
   return (
     <div className="w-full py-6">
-      <div className="flex items-center justify-between max-w-4xl mx-auto">
+      <div className="flex items-center justify-center max-w-3xl mx-auto">
         {WIZARD_STEPS.map((step, index) => {
           const isActive = currentStep === step.number;
           const isCompleted = currentStep > step.number;
           const isLast = index === WIZARD_STEPS.length - 1;
 
           return (
-            <div key={step.number} className="flex items-center flex-1">
+            <div key={step.number} className="flex items-center">
               {/* Step Circle */}
               <div className="flex flex-col items-center">
                 <div
@@ -57,7 +57,7 @@ export const WizardStepIndicator = ({ currentStep }: WizardStepIndicatorProps) =
               {!isLast && (
                 <div
                   className={cn(
-                    'flex-1 h-0.5 mx-2 transition-all',
+                    'w-32 h-0.5 mx-4 transition-all',
                     isCompleted ? 'bg-green-500' : 'bg-gray-200'
                   )}
                 />

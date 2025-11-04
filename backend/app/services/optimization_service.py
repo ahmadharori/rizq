@@ -9,7 +9,7 @@ import logging
 from uuid import UUID
 
 from app.config import settings
-from app.services.distance_service import DistanceService
+from app.services.routes_api_service import RoutesAPIService
 from app.database import SessionLocal
 from app.models.recipient import Recipient
 from app.utils.profiler import PerformanceProfiler
@@ -21,14 +21,14 @@ logger = logging.getLogger(__name__)
 class OptimizationService:
     """Service for route optimization using OR-Tools."""
     
-    def __init__(self, distance_service: Optional[DistanceService] = None):
+    def __init__(self, routes_api_service: Optional[RoutesAPIService] = None):
         """
         Initialize Optimization Service.
         
         Args:
-            distance_service: Distance service instance (creates new if None)
+            routes_api_service: Routes API service instance (creates new if None)
         """
-        self.distance_service = distance_service or DistanceService()
+        self.routes_api_service = routes_api_service or RoutesAPIService()
     
     def get_recipient_locations(
         self,
@@ -75,7 +75,8 @@ class OptimizationService:
         self,
         recipient_ids: List[UUID],
         depot_location: Optional[Tuple[float, float]] = None,
-        timeout_seconds: Optional[int] = None
+        timeout_seconds: Optional[int] = None,
+        use_traffic: bool = False
     ) -> Dict:
         """
         Solve Traveling Salesman Problem (TSP) for single courier.
@@ -84,6 +85,7 @@ class OptimizationService:
             recipient_ids: List of recipient UUIDs to visit
             depot_location: (lat, lng) of depot (defaults to config)
             timeout_seconds: Solver timeout (defaults to TSP_TIMEOUT_SECONDS)
+            use_traffic: Enable traffic-aware optimization (Routes API Pro mode)
         
         Returns:
             Dict with optimized_sequence, total_distance, total_duration
@@ -108,15 +110,16 @@ class OptimizationService:
         # Build locations list: [depot, recipient1, recipient2, ...]
         all_locations = [depot_location] + recipient_locations
         
-        # Get distance matrix from Google API
-        with profiler.profile("2. Google Distance Matrix API"):
-            matrix_data = self.distance_service.get_distance_matrix(
+        # Get distance matrix from Routes API
+        with profiler.profile("2. Google Routes API"):
+            matrix_data = self.routes_api_service.compute_route_matrix(
                 origins=all_locations,
-                destinations=all_locations
+                destinations=all_locations,
+                use_traffic=use_traffic
             )
         
         # Combine distance and duration with equal weights (0.5 each)
-        cost_matrix = self.distance_service.calculate_combined_cost_matrix(
+        cost_matrix = self._calculate_combined_cost_matrix(
             matrix_data["distance_matrix"],
             matrix_data["duration_matrix"],
             distance_weight=0.5,
@@ -211,7 +214,8 @@ class OptimizationService:
         num_couriers: int,
         capacity_per_courier: int,
         depot_location: Optional[Tuple[float, float]] = None,
-        timeout_seconds: Optional[int] = None
+        timeout_seconds: Optional[int] = None,
+        use_traffic: bool = False
     ) -> Dict:
         """
         Solve Capacitated Vehicle Routing Problem (CVRP) for multiple couriers.
@@ -222,6 +226,7 @@ class OptimizationService:
             capacity_per_courier: Maximum packages per courier
             depot_location: (lat, lng) of depot (defaults to config)
             timeout_seconds: Solver timeout (defaults to CVRP_TIMEOUT_SECONDS)
+            use_traffic: Enable traffic-aware optimization (Routes API Pro mode)
         
         Returns:
             Dict with routes (per courier), total_distance, total_duration
@@ -278,14 +283,15 @@ class OptimizationService:
         finally:
             db_session.close()
         
-        # Get distance matrix
-        matrix_data = self.distance_service.get_distance_matrix(
+        # Get distance matrix from Routes API
+        matrix_data = self.routes_api_service.compute_route_matrix(
             origins=all_locations,
-            destinations=all_locations
+            destinations=all_locations,
+            use_traffic=use_traffic
         )
         
         # Combine distance and duration
-        cost_matrix = self.distance_service.calculate_combined_cost_matrix(
+        cost_matrix = self._calculate_combined_cost_matrix(
             matrix_data["distance_matrix"],
             matrix_data["duration_matrix"],
             distance_weight=0.5,
@@ -466,3 +472,47 @@ class OptimizationService:
             "max_load": max_load,
             "min_load": min_load
         }
+    
+    def _calculate_combined_cost_matrix(
+        self,
+        distance_matrix: List[List[int]],
+        duration_matrix: List[List[int]],
+        distance_weight: float = 0.5,
+        duration_weight: float = 0.5
+    ) -> List[List[int]]:
+        """
+        Combine distance and duration matrices into single cost matrix.
+        
+        Args:
+            distance_matrix: Distance matrix in meters
+            duration_matrix: Duration matrix in seconds
+            distance_weight: Weight for distance (0.0 to 1.0)
+            duration_weight: Weight for duration (0.0 to 1.0)
+        
+        Returns:
+            Combined cost matrix (weighted sum, normalized)
+        """
+        if abs(distance_weight + duration_weight - 1.0) > 0.01:
+            raise ValueError("Weights must sum to 1.0")
+        
+        n = len(distance_matrix)
+        cost_matrix = []
+        
+        for i in range(n):
+            cost_row = []
+            for j in range(n):
+                # Normalize and combine (distance in km, duration in minutes)
+                distance_km = distance_matrix[i][j] / 1000.0
+                duration_min = duration_matrix[i][j] / 60.0
+                
+                # Combined cost (scaled to integer for OR-Tools)
+                combined_cost = int(
+                    (distance_weight * distance_km * 100) +
+                    (duration_weight * duration_min * 100)
+                )
+                
+                cost_row.append(combined_cost)
+            
+            cost_matrix.append(cost_row)
+        
+        return cost_matrix

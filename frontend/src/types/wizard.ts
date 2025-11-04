@@ -2,7 +2,7 @@ import type { Recipient } from './recipient';
 import type { Courier } from './courier';
 
 // Wizard Step Type
-export type WizardStep = 1 | 2 | 3 | 4;
+export type WizardStep = 1 | 2 | 3;
 
 // View Mode for Step 1
 export type ViewMode = 'all' | 'city';
@@ -32,6 +32,7 @@ export interface WizardState {
   
   // Rekomendasi Mode
   capacityPerCourier: number | null;
+  useTraffic: boolean;
   
   // Step 2: Courier Selection
   selectedCourierIds: string[];
@@ -116,6 +117,7 @@ export type WizardAction =
   | { type: 'SELECT_ALL_RECIPIENTS' }
   | { type: 'DESELECT_ALL_RECIPIENTS' }
   | { type: 'SET_CAPACITY'; capacity: number | null }
+  | { type: 'SET_USE_TRAFFIC'; useTraffic: boolean }
   | { type: 'ADD_MANUAL_GROUP'; group: ManualGroup }
   | { type: 'REMOVE_MANUAL_GROUP'; groupId: string }
   | { type: 'UPDATE_MANUAL_GROUP'; groupId: string; group: Partial<ManualGroup> }

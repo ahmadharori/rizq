@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ChevronUp, ChevronDown, Plus, Pencil } from 'lucide-react';
+import { Trash2, ChevronUp, ChevronDown, Plus, Pencil, Users, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { TableSkeleton } from '@/components/common/TableSkeleton';
+import { ErrorState } from '@/components/common/ErrorState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { getCouriers, deleteCourier, bulkDeleteCouriers } from '@/services/courierService';
 import type { CourierListItem, CourierListParams } from '@/types/courier';
 
@@ -32,6 +35,7 @@ export default function CourierList() {
   const navigate = useNavigate();
   const [couriers, setCouriers] = useState<CourierListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'bulk'; id?: string } | null>(null);
@@ -49,6 +53,7 @@ export default function CourierList() {
   const fetchCouriers = async () => {
     try {
       setLoading(true);
+      setError(null);
       const params: CourierListParams = {
         page,
         per_page: perPage,
@@ -62,12 +67,21 @@ export default function CourierList() {
       setTotalItems(data.pagination.total_items);
       setTotalPages(data.pagination.total_pages);
     } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || 'Gagal memuat data kurir';
+      setError(errorMessage);
       toast.error('Gagal memuat data kurir', {
-        description: error.response?.data?.detail || 'Terjadi kesalahan saat memuat data',
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  // Retry function for error state
+  const handleRetry = () => {
+    setError(null);
+    setPage(1);
+    fetchCouriers();
   };
 
   useEffect(() => {
@@ -197,54 +211,70 @@ export default function CourierList() {
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <input
-                  type="checkbox"
-                  checked={couriers.length > 0 && selectedIds.length === couriers.length}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="cursor-pointer"
-                />
-              </TableHead>
-              <TableHead
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => handleSort('name')}
-              >
-                Nama <SortIcon column="name" />
-              </TableHead>
-              <TableHead
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => handleSort('phone')}
-              >
-                No. Telepon <SortIcon column="phone" />
-              </TableHead>
-              <TableHead
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => handleSort('created_at')}
-              >
-                Tanggal Dibuat <SortIcon column="created_at" />
-              </TableHead>
-              <TableHead className="w-32">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+      {loading ? (
+        <TableSkeleton rows={perPage} columns={5} showCheckbox />
+      ) : error ? (
+        <ErrorState
+          message={error}
+          onRetry={handleRetry}
+        />
+      ) : couriers.length === 0 ? (
+        search ? (
+          <EmptyState
+            icon={Search}
+            title="Tidak Ada Hasil"
+            description={`Tidak ada kurir yang cocok dengan pencarian "${search}"`}
+            actionLabel="Reset Pencarian"
+            onAction={() => {
+              setSearch('');
+              setPage(1);
+            }}
+          />
+        ) : (
+          <EmptyState
+            icon={Users}
+            title="Belum Ada Kurir"
+            description="Mulai dengan menambahkan kurir pertama Anda"
+            actionLabel="Tambah Pengantar"
+            onAction={() => navigate('/couriers/new')}
+          />
+        )
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  Memuat data...
-                </TableCell>
+                <TableHead className="w-12">
+                  <input
+                    type="checkbox"
+                    checked={couriers.length > 0 && selectedIds.length === couriers.length}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="cursor-pointer"
+                  />
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('name')}
+                >
+                  Nama <SortIcon column="name" />
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('phone')}
+                >
+                  No. Telepon <SortIcon column="phone" />
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('created_at')}
+                >
+                  Tanggal Dibuat <SortIcon column="created_at" />
+                </TableHead>
+                <TableHead className="w-32">Aksi</TableHead>
               </TableRow>
-            ) : couriers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  Tidak ada data kurir
-                </TableCell>
-              </TableRow>
-            ) : (
-              couriers.map((courier) => (
+            </TableHeader>
+            <TableBody>
+              {couriers.map((courier) => (
                 <TableRow key={courier.id} className="hover:bg-muted/50">
                   <TableCell>
                     <input
@@ -280,11 +310,11 @@ export default function CourierList() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

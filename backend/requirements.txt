@@ -13,3 +13,5 @@ python-dotenv>=1.0.0
 ortools>=9.8.3296
 googlemaps>=4.10.0
 shapely>=2.0.2
+redis==5.0.0
+requests>=2.31.0

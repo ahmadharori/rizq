@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { assignmentService } from '@/services/assignmentService';
 import type { AssignmentDetail } from '@/types/assignment';
+import { DetailSkeleton } from '@/components/common/DetailSkeleton';
+import { ErrorState } from '@/components/common/ErrorState';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -58,26 +60,32 @@ export function AssignmentDetail() {
   const DEPOT_LNG = parseFloat(import.meta.env.VITE_DEPOT_LNG || '106.8456');
 
   useEffect(() => {
-    const loadAssignment = async () => {
-      if (!id) return;
-      
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data = await assignmentService.getDetail(id);
-        setAssignment(data);
-      } catch (err) {
-        setError('Gagal memuat detail assignment');
-        toast.error('Gagal memuat detail assignment');
-        console.error('Error fetching assignment detail:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     loadAssignment();
   }, [id]);
+
+  const loadAssignment = async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await assignmentService.getDetail(id);
+      setAssignment(data);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Gagal memuat detail assignment';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Error fetching assignment detail:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    loadAssignment();
+  };
 
   // Format distance (meters to km)
   const formatDistance = (meters: number | null): string => {
@@ -190,24 +198,15 @@ export function AssignmentDetail() {
   ) ?? false;
 
   if (loading) {
-    return (
-      <div className="p-6">
-        <div className="text-center py-8">Loading...</div>
-      </div>
-    );
+    return <DetailSkeleton fields={6} showMap={true} showHistory={false} />;
   }
 
-  if (error || !assignment) {
-    return (
-      <div className="p-6">
-        <div className="text-center py-8 text-red-500">{error || 'Assignment tidak ditemukan'}</div>
-        <div className="text-center">
-          <Button onClick={() => navigate('/assignments')}>
-            Kembali ke Daftar Assignment
-          </Button>
-        </div>
-      </div>
-    );
+  if (error) {
+    return <ErrorState message={error} onRetry={handleRetry} />;
+  }
+
+  if (!assignment) {
+    return null;
   }
 
   return (

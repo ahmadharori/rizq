@@ -101,36 +101,35 @@ def test_recipients():
 
 
 @pytest.fixture
-def mock_distance_matrix():
-    """Mock Google Distance Matrix API response."""
+def mock_routes_api():
+    """Mock Google Routes API response."""
     def _create_mock_response(num_locations):
         """Create mock distance matrix for given number of locations."""
         # Create simple distance matrix (symmetric, distance increases with index difference)
-        rows = []
+        distance_matrix = []
+        duration_matrix = []
+        
         for i in range(num_locations):
-            elements = []
+            distance_row = []
+            duration_row = []
             for j in range(num_locations):
                 if i == j:
                     # Same location
-                    elements.append({
-                        "status": "OK",
-                        "distance": {"value": 0},
-                        "duration": {"value": 0}
-                    })
+                    distance_row.append(0)
+                    duration_row.append(0)
                 else:
                     # Distance based on index difference (simplified)
                     distance = abs(i - j) * 2000  # 2km per index difference
                     duration = abs(i - j) * 300   # 5 minutes per index difference
-                    elements.append({
-                        "status": "OK",
-                        "distance": {"value": distance},
-                        "duration": {"value": duration}
-                    })
-            rows.append({"elements": elements})
+                    distance_row.append(distance)
+                    duration_row.append(duration)
+            distance_matrix.append(distance_row)
+            duration_matrix.append(duration_row)
         
         return {
-            "status": "OK",
-            "rows": rows
+            "distance_matrix": distance_matrix,
+            "duration_matrix": duration_matrix,
+            "status": "OK"
         }
     
     return _create_mock_response
@@ -139,20 +138,19 @@ def mock_distance_matrix():
 class TestTSPEndpoint:
     """Test cases for TSP optimization endpoint."""
     
-    def test_tsp_success(self, client, auth_headers, test_recipients, mock_distance_matrix):
+    def test_tsp_success(self, client, auth_headers, test_recipients, mock_routes_api):
         """Test successful TSP optimization."""
-        with patch('app.services.distance_service.googlemaps.Client') as mock_client:
-            # Mock Google Maps API
-            mock_instance = MagicMock()
-            mock_instance.distance_matrix.return_value = mock_distance_matrix(4)  # 3 recipients + depot
-            mock_client.return_value = mock_instance
+        with patch('app.services.routes_api_service.RoutesAPIService.compute_route_matrix') as mock_matrix:
+            # Mock Routes API
+            mock_matrix.return_value = mock_routes_api(4)  # 3 recipients + depot
             
             # Make request
             response = client.post(
                 "/api/v1/optimize/tsp",
                 json={
                     "recipient_ids": [str(rid) for rid in test_recipients[:3]],
-                    "timeout_seconds": 5
+                    "timeout_seconds": 5,
+                    "use_traffic": False
                 },
                 headers=auth_headers
             )
@@ -172,12 +170,10 @@ class TestTSPEndpoint:
             assert data["total_distance_meters"] > 0
             assert data["total_duration_seconds"] > 0
     
-    def test_tsp_with_custom_depot(self, client, auth_headers, test_recipients, mock_distance_matrix):
+    def test_tsp_with_custom_depot(self, client, auth_headers, test_recipients, mock_routes_api):
         """Test TSP with custom depot location."""
-        with patch('app.services.distance_service.googlemaps.Client') as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.distance_matrix.return_value = mock_distance_matrix(4)
-            mock_client.return_value = mock_instance
+        with patch('app.services.routes_api_service.RoutesAPIService.compute_route_matrix') as mock_matrix:
+            mock_matrix.return_value = mock_routes_api(4)
             
             response = client.post(
                 "/api/v1/optimize/tsp",
@@ -187,7 +183,8 @@ class TestTSPEndpoint:
                         "lat": -6.195000,
                         "lng": 106.810000
                     },
-                    "timeout_seconds": 5
+                    "timeout_seconds": 5,
+                    "use_traffic": False
                 },
                 headers=auth_headers
             )
@@ -238,12 +235,10 @@ class TestTSPEndpoint:
 class TestCVRPEndpoint:
     """Test cases for CVRP optimization endpoint."""
     
-    def test_cvrp_success(self, client, auth_headers, test_recipients, mock_distance_matrix):
+    def test_cvrp_success(self, client, auth_headers, test_recipients, mock_routes_api):
         """Test successful CVRP optimization."""
-        with patch('app.services.distance_service.googlemaps.Client') as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.distance_matrix.return_value = mock_distance_matrix(6)  # 5 recipients + depot
-            mock_client.return_value = mock_instance
+        with patch('app.services.routes_api_service.RoutesAPIService.compute_route_matrix') as mock_matrix:
+            mock_matrix.return_value = mock_routes_api(6)  # 5 recipients + depot
             
             response = client.post(
                 "/api/v1/optimize/cvrp",
@@ -251,7 +246,8 @@ class TestCVRPEndpoint:
                     "recipient_ids": [str(rid) for rid in test_recipients],
                     "num_couriers": 2,
                     "capacity_per_courier": 15,
-                    "timeout_seconds": 10
+                    "timeout_seconds": 10,
+                    "use_traffic": False
                 },
                 headers=auth_headers
             )
@@ -280,12 +276,10 @@ class TestCVRPEndpoint:
                 assert "total_distance_meters" in route
                 assert "total_duration_seconds" in route
     
-    def test_cvrp_insufficient_capacity(self, client, auth_headers, test_recipients, mock_distance_matrix):
+    def test_cvrp_insufficient_capacity(self, client, auth_headers, test_recipients, mock_routes_api):
         """Test CVRP with insufficient total capacity."""
-        with patch('app.services.distance_service.googlemaps.Client') as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.distance_matrix.return_value = mock_distance_matrix(6)
-            mock_client.return_value = mock_instance
+        with patch('app.services.routes_api_service.RoutesAPIService.compute_route_matrix') as mock_matrix:
+            mock_matrix.return_value = mock_routes_api(6)
             
             # Total demand = 5 recipients * 5 packages = 25
             # Total capacity = 2 couriers * 10 capacity = 20 (insufficient)
@@ -295,7 +289,8 @@ class TestCVRPEndpoint:
                     "recipient_ids": [str(rid) for rid in test_recipients],
                     "num_couriers": 2,
                     "capacity_per_courier": 10,
-                    "timeout_seconds": 10
+                    "timeout_seconds": 10,
+                    "use_traffic": False
                 },
                 headers=auth_headers
             )
@@ -303,12 +298,10 @@ class TestCVRPEndpoint:
             assert response.status_code == 400
             assert "infeasible" in response.json()["detail"].lower() or "exceeds" in response.json()["detail"].lower()
     
-    def test_cvrp_single_courier(self, client, auth_headers, test_recipients, mock_distance_matrix):
+    def test_cvrp_single_courier(self, client, auth_headers, test_recipients, mock_routes_api):
         """Test CVRP with single courier (should work like TSP)."""
-        with patch('app.services.distance_service.googlemaps.Client') as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.distance_matrix.return_value = mock_distance_matrix(4)
-            mock_client.return_value = mock_instance
+        with patch('app.services.routes_api_service.RoutesAPIService.compute_route_matrix') as mock_matrix:
+            mock_matrix.return_value = mock_routes_api(4)
             
             response = client.post(
                 "/api/v1/optimize/cvrp",
@@ -316,7 +309,8 @@ class TestCVRPEndpoint:
                     "recipient_ids": [str(rid) for rid in test_recipients[:3]],
                     "num_couriers": 1,
                     "capacity_per_courier": 20,
-                    "timeout_seconds": 10
+                    "timeout_seconds": 10,
+                    "use_traffic": False
                 },
                 headers=auth_headers
             )

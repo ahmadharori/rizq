@@ -8,6 +8,7 @@ const initialState: WizardState = {
   assignmentMode: 'rekomendasi',
   manualGroups: [],
   capacityPerCourier: null,
+  useTraffic: false,
   selectedCourierIds: [],
   assignments: [],
   removedRecipientIds: [],
@@ -52,6 +53,9 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
 
     case 'SET_CAPACITY':
       return { ...state, capacityPerCourier: action.capacity };
+
+    case 'SET_USE_TRAFFIC':
+      return { ...state, useTraffic: action.useTraffic };
 
     case 'ADD_MANUAL_GROUP':
       return {
@@ -211,6 +215,10 @@ export const useWizardState = () => {
       dispatch({ type: 'SET_CAPACITY', capacity });
     }, []),
 
+    setUseTraffic: useCallback((useTraffic: boolean) => {
+      dispatch({ type: 'SET_USE_TRAFFIC', useTraffic });
+    }, []),
+
     addManualGroup: useCallback((group: WizardState['manualGroups'][0]) => {
       dispatch({ type: 'ADD_MANUAL_GROUP', group });
     }, []),
@@ -287,7 +295,7 @@ export const useWizardState = () => {
 
     // Navigation helpers
     nextStep: useCallback(() => {
-      dispatch({ type: 'SET_STEP', step: Math.min(state.currentStep + 1, 4) as WizardStep });
+      dispatch({ type: 'SET_STEP', step: Math.min(state.currentStep + 1, 3) as WizardStep });
     }, [state.currentStep]),
 
     previousStep: useCallback(() => {

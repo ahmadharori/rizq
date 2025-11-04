@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MapPin, List } from 'lucide-react';
+import { MapPin, List, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -472,6 +472,42 @@ export const Step1ViewRecipients = ({
               <p className="text-xs text-gray-600 mt-1">
                 Sistem akan membagi penerima berdasarkan kapasitas yang Anda masukkan
               </p>
+
+              {/* Traffic Toggle */}
+              <div className="mt-4 pt-4 border-t border-blue-200">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="useTraffic"
+                    checked={state.useTraffic}
+                    onChange={(e) => actions.setUseTraffic(e.target.checked)}
+                    className="mt-1 rounded"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="useTraffic" className="font-medium text-gray-900 cursor-pointer">
+                      Gunakan Data Traffic Real-Time
+                    </label>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Optimasi dengan mempertimbangkan kondisi lalu lintas saat ini.{' '}
+                      <strong className="text-orange-600">Biaya lebih tinggi jika melebihi free tier.</strong>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Cost Warning Alert */}
+                {state.useTraffic && (
+                  <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex gap-2">
+                      <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs text-orange-800">
+                        <strong>Perhatian Biaya:</strong> Mode traffic menggunakan Routes API Pro SKU. 
+                        Free tier: 5.000 elemen/bulan. Estimasi penggunaan untuk {state.selectedRecipientIds.length} penerima: 
+                        <strong> ~{Math.pow(state.selectedRecipientIds.length + 1, 2)} elemen</strong>.
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

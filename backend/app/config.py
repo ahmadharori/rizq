@@ -38,6 +38,17 @@ class Settings(BaseSettings):
     # Performance Profiling
     ENABLE_PROFILING: bool = False  # Set to True for debugging/benchmarking
     
+    # Redis Configuration
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_USERNAME: str = ""
+    REDIS_PASSWORD: str = ""
+    REDIS_DB: int = 0
+    REDIS_SSL: bool = False
+    
+    # Routes API Configuration
+    ROUTES_API_TIMEOUT: int = 30  # seconds
+    
     @property
     def cors_origins_list(self) -> List[str]:
         """Convert CORS_ORIGINS string to list."""

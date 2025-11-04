@@ -16,11 +16,6 @@ export const WIZARD_STEPS: StepInfo[] = [
     number: 3,
     label: 'Preview & Edit',
     description: 'Tinjau dan sesuaikan assignment'
-  },
-  {
-    number: 4,
-    label: 'Selesai',
-    description: 'Simpan assignment'
   }
 ];
 

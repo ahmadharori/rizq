@@ -26,9 +26,21 @@ class TSPRequest(BaseModel):
     recipient_ids: List[UUID] = Field(..., description="List of recipient UUIDs to visit", min_length=1)
     depot_location: Optional[Location] = Field(None, description="Depot location (optional, defaults to config)")
     timeout_seconds: Optional[int] = Field(None, description="Solver timeout in seconds", ge=1, le=300)
+    use_traffic: bool = Field(False, description="Enable traffic-aware optimization (Routes API Pro mode, higher cost)")
     
     @validator('recipient_ids')
     def validate_recipient_ids(cls, v):
+        """Validate that recipient_ids list has appropriate length for TSP.
+        
+        Args:
+            v: List of recipient IDs to validate
+            
+        Returns:
+            The validated list of recipient IDs
+            
+        Raises:
+            ValueError: If list is empty or exceeds 100 recipients
+        """
         if len(v) < 1:
             raise ValueError('At least 1 recipient is required')
         if len(v) > 100:
@@ -47,7 +59,8 @@ class TSPRequest(BaseModel):
                     "lat": -6.200000,
                     "lng": 106.816666
                 },
-                "timeout_seconds": 5
+                "timeout_seconds": 5,
+                "use_traffic": False
             }
         }
 
@@ -81,9 +94,21 @@ class CVRPRequest(BaseModel):
     capacity_per_courier: int = Field(..., description="Maximum packages per courier", ge=1, le=100)
     depot_location: Optional[Location] = Field(None, description="Depot location (optional, defaults to config)")
     timeout_seconds: Optional[int] = Field(None, description="Solver timeout in seconds", ge=1, le=300)
+    use_traffic: bool = Field(False, description="Enable traffic-aware optimization (Routes API Pro mode, higher cost)")
     
     @validator('recipient_ids')
     def validate_recipient_ids(cls, v):
+        """Validate that recipient_ids list has appropriate length for CVRP.
+        
+        Args:
+            v: List of recipient IDs to validate
+            
+        Returns:
+            The validated list of recipient IDs
+            
+        Raises:
+            ValueError: If list is empty or exceeds 200 recipients
+        """
         if len(v) < 1:
             raise ValueError('At least 1 recipient is required')
         if len(v) > 200:
@@ -106,7 +131,8 @@ class CVRPRequest(BaseModel):
                     "lat": -6.200000,
                     "lng": 106.816666
                 },
-                "timeout_seconds": 60
+                "timeout_seconds": 60,
+                "use_traffic": False
             }
         }
 

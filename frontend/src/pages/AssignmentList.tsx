@@ -7,6 +7,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { assignmentService } from '@/services/assignmentService';
 import type { AssignmentListItem, AssignmentFilters } from '@/types/assignment';
+import { TableSkeleton } from '@/components/common/TableSkeleton';
+import { ErrorState } from '@/components/common/ErrorState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +22,7 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ClipboardList, Search } from 'lucide-react';
 
 export function AssignmentList() {
   const navigate = useNavigate();
@@ -64,6 +67,13 @@ export function AssignmentList() {
 
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Retry function for error state
+  const handleRetry = () => {
+    setError(null);
+    setPage(1);
+    setLoading(true);
+  };
 
   // Fetch assignments when dependencies change
   useEffect(() => {
@@ -155,9 +165,33 @@ export function AssignmentList() {
 
       {/* Data Table */}
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <TableSkeleton rows={perPage} columns={7} />
       ) : error ? (
-        <div className="text-center py-8 text-red-500">{error}</div>
+        <ErrorState
+          message={error}
+          onRetry={handleRetry}
+        />
+      ) : assignments.length === 0 ? (
+        searchInput ? (
+          <EmptyState
+            icon={Search}
+            title="Tidak Ada Hasil"
+            description={`Tidak ada assignment yang cocok dengan pencarian "${searchInput}"`}
+            actionLabel="Reset Pencarian"
+            onAction={() => {
+              setSearchInput('');
+              setPage(1);
+            }}
+          />
+        ) : (
+          <EmptyState
+            icon={ClipboardList}
+            title="Belum Ada Assignment"
+            description="Mulai dengan membuat assignment baru untuk mengatur pengiriman"
+            actionLabel="Buat Assignment"
+            onAction={() => navigate('/assignments/create')}
+          />
+        )
       ) : (
         <>
           <div className="border rounded-lg">
@@ -204,14 +238,7 @@ export function AssignmentList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assignments.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      Belum ada assignment
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  assignments.map((assignment, index) => (
+                {assignments.map((assignment, index) => (
                     <TableRow
                       key={assignment.id}
                       className="cursor-pointer hover:bg-gray-50"
@@ -225,8 +252,7 @@ export function AssignmentList() {
                       <TableCell className="text-right">{formatDuration(assignment.total_duration_seconds)}</TableCell>
                       <TableCell>{formatDate(assignment.created_at)}</TableCell>
                     </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>
